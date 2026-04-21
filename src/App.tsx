@@ -7,11 +7,15 @@ import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
  * Biểu tượng SVG tích hợp sẵn
  */
 const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
-const IconPrinter = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>;
-const IconImage = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>;
-const IconEdit = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>;
+const IconPrinter = ({ size = 18 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>;
+const IconImage = ({ size = 18 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>;
+const IconEdit = ({ size = 18 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>;
 const IconX = ({ size = 16 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 const IconLoader = ({ className }: { className?: string }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>;
+const IconMenu = ({ size = 20 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
+const IconSave = ({ size = 16 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>;
+const IconHistory = ({ size = 16 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
+const IconTrash = ({ size = 16 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
 
 // Định nghĩa kiểu dữ liệu
 interface Activity {
@@ -23,6 +27,13 @@ interface Activity {
 interface ChartItem {
   label: string;
   value: number;
+}
+
+interface ReportVersion {
+  id: string;
+  timestamp: number;
+  name: string;
+  payload: any;
 }
 
 // Cấu hình Firebase
@@ -46,15 +57,21 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const [showDrawer, setShowDrawer] = useState(false);
   const [status, setStatus] = useState('NGOẠI TUYẾN');
   const [libsReady, setLibsReady] = useState(false);
   const [scale, setScale] = useState(1);
   
+  // UI States
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [newVersionName, setNewVersionName] = useState('');
+  
   // TÍNH NĂNG RESIZER: State lưu phần trăm độ rộng của cột trái
   const [leftColWidth, setLeftColWidth] = useState(58);
 
-  // App State
+  // App Data State
   const [headerTitle, setHeaderTitle] = useState('BÁO CÁO CHIẾN DỊCH TRUYỀN THÔNG');
   const [projectInfo, setProjectInfo] = useState('DỰ ÁN: THE WIN CITY | TUẦN 14 - 2026');
   const [reportDate, setReportDate] = useState('15/04/2026');
@@ -77,6 +94,9 @@ export default function App() {
     { num: '03', title: 'EVENT', desc: '- 2 BẢN MCS (SỰ KIỆN KHỞI CÔNG & MINI EVENT)\n- BÀI PHÁT BIỂU ANH THẾ ANH' }
   ]);
   const [activityFontSize, setActivityFontSize] = useState(1);
+  
+  // Versions State
+  const [savedVersions, setSavedVersions] = useState<ReportVersion[]>([]);
 
   const mainSlideRef = useRef<HTMLDivElement>(null);
   const chartCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -194,6 +214,7 @@ export default function App() {
         if (data.chartData) setChartData(data.chartData);
         if (data.activities) setActivities(data.activities);
         if (data.activityFontSize) setActivityFontSize(data.activityFontSize);
+        if (data.savedVersions) setSavedVersions(data.savedVersions);
       }
       setLoading(false);
     }, (error) => {
@@ -310,6 +331,7 @@ export default function App() {
         chartData,
         activities,
         activityFontSize,
+        savedVersions,
         lastUpdated: new Date().toISOString(),
         ...updates
       }, { merge: true });
@@ -356,6 +378,70 @@ export default function App() {
     }
   };
 
+  // Tính năng Lưu Phiên Bản Báo Cáo
+  const handleSaveVersion = () => {
+    if (!newVersionName.trim()) return;
+    const newVersion: ReportVersion = {
+      id: Date.now().toString(),
+      timestamp: Date.now(),
+      name: newVersionName,
+      payload: {
+        headerTitle,
+        projectInfo,
+        reportDate,
+        chartMainTitle,
+        chartSubTitle,
+        masterBudget,
+        chartData,
+        activities,
+        activityFontSize
+      }
+    };
+    
+    const updatedVersions = [newVersion, ...savedVersions];
+    setSavedVersions(updatedVersions);
+    syncToFirebase({ savedVersions: updatedVersions });
+    
+    setNewVersionName('');
+    setShowSaveModal(false);
+  };
+
+  // Tính năng Khôi phục/Tải phiên bản báo cáo cũ
+  const handleLoadVersion = (version: ReportVersion) => {
+    const p = version.payload;
+    setHeaderTitle(p.headerTitle);
+    setProjectInfo(p.projectInfo);
+    setReportDate(p.reportDate);
+    setChartMainTitle(p.chartMainTitle);
+    setChartSubTitle(p.chartSubTitle);
+    setMasterBudget(p.masterBudget);
+    setChartData(p.chartData);
+    setActivities(p.activities);
+    setActivityFontSize(p.activityFontSize || 1);
+    
+    // Đồng bộ lại lên Firebase để mọi người đều thấy
+    syncToFirebase({
+      headerTitle: p.headerTitle,
+      projectInfo: p.projectInfo,
+      reportDate: p.reportDate,
+      chartMainTitle: p.chartMainTitle,
+      chartSubTitle: p.chartSubTitle,
+      masterBudget: p.masterBudget,
+      chartData: p.chartData,
+      activities: p.activities,
+      activityFontSize: p.activityFontSize || 1
+    });
+    
+    setShowHistoryDrawer(false);
+  };
+
+  // Xóa một phiên bản đã lưu
+  const handleDeleteVersion = (id: string) => {
+    const updated = savedVersions.filter(v => v.id !== id);
+    setSavedVersions(updated);
+    syncToFirebase({ savedVersions: updated });
+  };
+
   if ((loading && status === 'NGOẠI TUYẾN') || !libsReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-white gap-4 font-['Be_Vietnam_Pro'] text-left" style={{ backgroundColor: '#0f172a' }}>
@@ -390,17 +476,35 @@ export default function App() {
         </div>
       )}
 
-      {/* Toolbar */}
-      <div className="fixed top-6 right-6 flex flex-col gap-3 z-50 print:hidden">
-        <button onClick={() => window.print()} className="bg-orange-600 text-white px-6 py-3 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2">
-          <IconPrinter /> XUẤT PDF
+      {/* Menu Gọn Gàng (Dropdown) */}
+      <div className="fixed top-6 right-6 z-50 print:hidden flex flex-col items-end">
+        <button 
+          onClick={() => setIsMenuOpen(!isMenuOpen)} 
+          className="bg-slate-800 text-white p-4 rounded-full shadow-2xl hover:scale-105 transition hover:bg-slate-700 flex items-center justify-center"
+          title="Menu Công Cụ"
+        >
+          {isMenuOpen ? <IconX size={20} /> : <IconMenu size={20} />}
         </button>
-        <button onClick={handleExportImage} className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2">
-          <IconImage /> XUẤT HÌNH ẢNH
-        </button>
-        <button onClick={() => setShowDrawer(true)} className="bg-slate-800 text-white px-6 py-3 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2">
-          <IconEdit /> SỬA DỮ LIỆU
-        </button>
+
+        {isMenuOpen && (
+          <div className="flex flex-col gap-2 items-end mt-3 animate-fade-in-down">
+            <button onClick={() => { window.print(); setIsMenuOpen(false); }} className="bg-orange-600 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
+              <IconPrinter size={16} /> Xuất PDF
+            </button>
+            <button onClick={() => { handleExportImage(); setIsMenuOpen(false); }} className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
+              <IconImage size={16} /> Xuất Hình Ảnh
+            </button>
+            <button onClick={() => { setShowDrawer(true); setIsMenuOpen(false); }} className="bg-slate-700 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
+              <IconEdit size={16} /> Sửa Dữ Liệu
+            </button>
+            <button onClick={() => { setShowSaveModal(true); setIsMenuOpen(false); }} className="bg-emerald-600 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
+              <IconSave size={16} /> Lưu Phiên Bản
+            </button>
+            <button onClick={() => { setShowHistoryDrawer(true); setIsMenuOpen(false); }} className="bg-indigo-600 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
+              <IconHistory size={16} /> Lịch Sử Báo Cáo
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ width: 1280 * scale, height: 720 * scale, position: 'relative' }}>
@@ -439,10 +543,7 @@ export default function App() {
                   {projectInfo}
                 </p>
               </div>
-              <div className="text-right flex-none">
-                <div className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${status === 'ĐÃ KẾT NỐI' ? 'text-emerald-500' : 'text-slate-300'}`}>
-                  {status}
-                </div>
+              <div className="text-right flex-none mt-2">
                 <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 editable leading-none">
                   {reportDate}
                 </div>
@@ -451,7 +552,7 @@ export default function App() {
 
             <div className="flex flex-1 overflow-hidden text-left" id="contentWrapper" ref={contentWrapperRef}>
               
-              {/* Left Column - Gắn thêm min-h-0 để giữ layout không bị tràn */}
+              {/* Left Column */}
               <div className="flex flex-col p-8 min-h-0 overflow-visible border-r border-slate-100" style={{ flex: `0 0 ${leftColWidth}%` }}>
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-4">
@@ -491,7 +592,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* TÍNH NĂNG RESIZER CO KÉO DIỆN TÍCH */}
+              {/* TÍNH NĂNG RESIZER */}
               <div 
                 className="resizer-v print:hidden"
                 onMouseDown={(e) => {
@@ -500,7 +601,7 @@ export default function App() {
                 }}
               ></div>
 
-              {/* Right Column - Khóa cứng min-h-0 và shrink-0 để không bị đẩy rớt nội dung */}
+              {/* Right Column */}
               <div className="flex flex-col flex-1 pr-10 py-6 min-w-0 min-h-0 overflow-visible text-left">
                 
                 <div className="flex items-start justify-between mb-8 px-2 gap-4 shrink-0">
@@ -543,10 +644,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* Drawer Cập nhật dữ liệu */}
+      {/* MODAL 1: Sửa dữ liệu biểu đồ */}
       {showDrawer && (
         <div className="fixed inset-0 z-[100] flex items-center justify-end p-6 bg-slate-900/40 backdrop-blur-sm print:hidden text-left">
-          <div className="bg-white w-[600px] h-full rounded-3xl shadow-2xl p-8 flex flex-col">
+          <div className="bg-white w-[600px] h-full rounded-3xl shadow-2xl p-8 flex flex-col animate-fade-in-right">
             <div className="flex justify-between items-center mb-8 pb-4 border-b">
               <h3 className="font-black text-slate-800 uppercase tracking-widest">Dữ liệu biểu đồ</h3>
               <button onClick={() => setShowDrawer(false)} className="text-slate-400 hover:text-slate-900"><IconX size={24} /></button>
@@ -566,24 +667,98 @@ export default function App() {
                   {chartData.map((item, idx) => (
                     <tr key={idx} className="border-b border-slate-50">
                       <td className="py-3">
-                        <input className="w-full font-bold text-slate-700 outline-none bg-slate-50 px-2 py-2 rounded-xl text-left" value={item.label} onChange={(e) => { const n = [...chartData]; n[idx].label = e.target.value; setChartData(n); syncToFirebase({chartData: n}); }} />
+                        <input className="w-full font-bold text-slate-700 outline-none bg-slate-50 px-2 py-2 rounded-xl text-left focus:ring-2 focus:ring-orange-200 focus:bg-white transition" value={item.label} onChange={(e) => { const n = [...chartData]; n[idx].label = e.target.value; setChartData(n); syncToFirebase({chartData: n}); }} />
                       </td>
                       <td className="py-3 text-right">
-                        <input className="text-right font-black text-orange-600 outline-none bg-slate-50 px-2 py-2 rounded-xl w-full" value={formatNumber(item.value)} onChange={(e) => { const n = [...chartData]; n[idx].value = parseNumber(e.target.value); setChartData(n); syncToFirebase({chartData: n}); }} />
+                        <input className="text-right font-black text-orange-600 outline-none bg-slate-50 px-2 py-2 rounded-xl w-full focus:ring-2 focus:ring-orange-200 focus:bg-white transition" value={formatNumber(item.value)} onChange={(e) => { const n = [...chartData]; n[idx].value = parseNumber(e.target.value); setChartData(n); syncToFirebase({chartData: n}); }} />
                       </td>
                       <td className="py-3 text-right pl-2">
-                        <input placeholder="+0" className="w-full text-right font-bold text-emerald-600 bg-emerald-50 px-2 py-2 rounded-xl outline-none border border-emerald-100" onBlur={(e) => { const v = parseNumber(e.currentTarget.value); if(v>0){ const n=[...chartData]; n[idx].value+=v; setChartData(n); syncToFirebase({chartData:n}); e.currentTarget.value=''; } }} />
+                        <input placeholder="+0" className="w-full text-right font-bold text-emerald-600 bg-emerald-50 px-2 py-2 rounded-xl outline-none border border-emerald-100 focus:ring-2 focus:ring-emerald-200 focus:bg-white transition" onBlur={(e) => { const v = parseNumber(e.currentTarget.value); if(v>0){ const n=[...chartData]; n[idx].value+=v; setChartData(n); syncToFirebase({chartData:n}); e.currentTarget.value=''; } }} />
                       </td>
                       <td className="text-right pl-2">
-                        <button onClick={() => { const n = chartData.filter((_, i) => i !== idx); setChartData(n); syncToFirebase({chartData: n}); }} className="text-slate-300 hover:text-red-500"><IconX size={14} /></button>
+                        <button onClick={() => { const n = chartData.filter((_, i) => i !== idx); setChartData(n); syncToFirebase({chartData: n}); }} className="text-slate-300 hover:text-red-500 bg-slate-50 p-2 rounded-xl hover:bg-red-50 transition"><IconX size={14} /></button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <button onClick={() => { const n = [...chartData, { label: 'Mục mới', value: 0 }]; setChartData(n); syncToFirebase({chartData: n}); }} className="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black text-slate-400 hover:border-orange-300 hover:text-orange-600 transition uppercase">+ THÊM DÒNG MỚI</button>
+              <button onClick={() => { const n = [...chartData, { label: 'Mục mới', value: 0 }]; setChartData(n); syncToFirebase({chartData: n}); }} className="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black text-slate-400 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition uppercase">+ THÊM DÒNG MỚI</button>
             </div>
-            <button onClick={() => setShowDrawer(false)} className="mt-6 bg-slate-900 text-white py-4 rounded-2xl font-bold uppercase tracking-widest hover:bg-orange-600 transition">HOÀN TẤT</button>
+            <button onClick={() => setShowDrawer(false)} className="mt-6 bg-slate-900 text-white py-4 rounded-2xl font-bold uppercase tracking-widest hover:bg-orange-600 transition shadow-lg">HOÀN TẤT</button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Popup Lưu Phiên Bản */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm print:hidden">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md flex flex-col animate-fade-in-up">
+            <h3 className="font-black text-slate-800 uppercase tracking-widest mb-4">Lưu phiên bản báo cáo</h3>
+            <p className="text-sm text-slate-500 mb-6">Lưu lại trạng thái báo cáo hiện tại để bạn có thể xem lại hoặc tiếp tục công việc vào tuần sau.</p>
+            
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tên phiên bản</label>
+            <input 
+              type="text" 
+              placeholder="VD: Báo cáo Tuần 15 - 2026..." 
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition mb-8"
+              value={newVersionName}
+              onChange={(e) => setNewVersionName(e.target.value)}
+              autoFocus
+            />
+            
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setShowSaveModal(false)} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition">HỦY</button>
+              <button 
+                onClick={handleSaveVersion} 
+                disabled={!newVersionName.trim()} 
+                className="px-6 py-3 rounded-xl font-bold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 transition shadow-lg shadow-orange-200"
+              >
+                LƯU LẠI
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Drawer Lịch Sử Báo Cáo */}
+      {showHistoryDrawer && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-end p-6 bg-slate-900/40 backdrop-blur-sm print:hidden text-left">
+          <div className="bg-white w-[450px] h-full rounded-3xl shadow-2xl p-8 flex flex-col animate-fade-in-right">
+            <div className="flex justify-between items-center mb-8 pb-4 border-b">
+              <h3 className="font-black text-slate-800 uppercase tracking-widest">Lịch sử báo cáo</h3>
+              <button onClick={() => setShowHistoryDrawer(false)} className="text-slate-400 hover:text-slate-900"><IconX size={24} /></button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto pr-2 custom-scroll text-left">
+              {savedVersions.length === 0 ? (
+                <div className="text-center mt-12">
+                  <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <IconHistory size={32} />
+                  </div>
+                  <p className="text-slate-400 text-sm font-medium">Chưa có phiên bản nào được lưu.</p>
+                  <p className="text-slate-400 text-xs mt-2">Sử dụng nút "Lưu Phiên Bản" trong Menu để lưu lại trạng thái báo cáo.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {savedVersions.map(v => (
+                    <div key={v.id} className="bg-white border-2 border-slate-100 rounded-2xl p-5 flex flex-col gap-4 group hover:border-orange-200 hover:shadow-lg transition relative overflow-hidden">
+                      <div className="flex justify-between items-start z-10">
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-base">{v.name}</h4>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium mt-1">{new Date(v.timestamp).toLocaleString('vi-VN')}</p>
+                        </div>
+                        <button onClick={() => handleDeleteVersion(v.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition p-2 bg-slate-50 hover:bg-red-50 rounded-lg">
+                          <IconTrash size={16} />
+                        </button>
+                      </div>
+                      <button onClick={() => handleLoadVersion(v)} className="w-full py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 hover:text-white hover:bg-orange-600 hover:border-orange-600 transition z-10">
+                        KHÔI PHỤC PHIÊN BẢN NÀY
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -723,6 +898,25 @@ export default function App() {
 
         .custom-scroll::-webkit-scrollbar { width: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Hiệu ứng mượt mà cho Menu và Modal */
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down { animation: fadeInDown 0.2s ease-out forwards; }
+        
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes fadeInRight {
+          from { opacity: 0; transform: translateX(50px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in-right { animation: fadeInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         @media print {
             body { background: white !important; padding: 0 !important; overflow: visible !important; }
