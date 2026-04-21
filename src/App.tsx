@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, type User } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 /**
@@ -213,7 +213,7 @@ export default function App() {
   }, [libsReady, chartData]);
 
   // Đồng bộ Firestore
-  const syncToFirebase = async (updates = {}) => {
+  const syncToFirebase = async (updates: any = {}) => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'budget', 'dashboard');
     try {
