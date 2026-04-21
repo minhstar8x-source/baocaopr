@@ -591,7 +591,7 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="space-y-1 flex-1 overflow-y-auto pr-4 custom-scroll text-left min-h-0" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
+                <div className="flex-1 overflow-y-auto pr-4 custom-scroll text-left min-h-0" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
                   {activities.map((act, idx) => (
                     <div key={idx} className="activity-block group text-left">
                       <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.innerText || ''; setActivities(n); syncToFirebase({activities: n}); }} className="activity-num editable text-left">
@@ -800,17 +800,17 @@ export default function App() {
             cursor: text;
         }
         .editable:focus {
-            background-color: #fff7ed;
-            box-shadow: 0 0 0 1px #fdba74;
+            outline: none;
+            border-bottom: 2px solid #ea580c;
         }
 
         .activity-block {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
             position: relative;
             display: flex;
             align-items: flex-start;
-            gap: 15px;
-            padding: 8px 0;
+            gap: 12px;
+            padding: 4px 0;
             text-align: left;
         }
 
@@ -838,7 +838,7 @@ export default function App() {
             font-weight: 800;
             color: #1e293b;
             text-transform: uppercase;
-            margin-bottom: 6px !important;
+            margin-bottom: 2px !important;
             line-height: 1.2;
             text-align: left;
             display: block;
@@ -847,7 +847,7 @@ export default function App() {
         .activity-desc {
             font-size: calc(0.85rem * var(--activity-font-scale, 1)); 
             color: #475569;
-            line-height: 1.4;
+            line-height: 1.3;
             text-align: left;
             display: block;
         }
