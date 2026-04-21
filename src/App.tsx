@@ -284,9 +284,18 @@ export default function App() {
 
   const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   const parseNumber = (str: string) => parseInt(str.toString().replace(/\./g, '')) || 0;
+  
+  // Hàm format tiền chuẩn xác, giữ nguyên dấu chấm phân cách hàng nghìn
   const smartFormat = (v: number) => {
-    if (v >= 1000000000) return (v / 1000000000).toFixed(1).replace('.0', '') + ' Tỷ';
-    return (v / 1000000) + ' Tr';
+    if (v >= 1000000000) {
+      const val = v / 1000000000;
+      return val.toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' tỷ';
+    }
+    if (v >= 1000000 && v % 1000000 === 0) {
+      return (v / 1000000).toLocaleString('vi-VN') + ' tr';
+    }
+    // Hiển thị đầy đủ số có dấu chấm ngăn cách hàng nghìn cho các số lẻ (VD: 45.178.560)
+    return formatNumber(v);
   };
 
   // 4. Khởi tạo Biểu đồ
@@ -331,7 +340,7 @@ export default function App() {
           responsive: true,
           maintainAspectRatio: false,
           layout: { 
-            padding: { left: 10, right: 50, top: 10, bottom: 10 } 
+            padding: { left: 10, right: 60, top: 10, bottom: 10 } 
           },
           plugins: {
             legend: { display: false },
@@ -348,7 +357,8 @@ export default function App() {
               anchor: 'end',
               offset: 12,
               color: '#1e293b',
-              font: { family: 'Be Vietnam Pro', weight: '800', size: 9 },
+              // KHÔNG in đậm cho số liệu trên thanh biểu đồ
+              font: { family: 'Be Vietnam Pro', weight: 'normal', size: 9 },
               formatter: (v: number) => smartFormat(v),
               clip: false
             }
@@ -357,7 +367,8 @@ export default function App() {
             x: { 
               beginAtZero: true, 
               grid: { color: '#f1f5f9', drawBorder: false },
-              ticks: { font: { family: 'Be Vietnam Pro', size: 9, weight: '700' }, callback: (v: any) => smartFormat(v) }
+              // KHÔNG in đậm cho trục X
+              ticks: { font: { family: 'Be Vietnam Pro', size: 9, weight: 'normal' }, callback: (v: any) => smartFormat(v) }
             },
             y: { 
               grid: { display: false },
@@ -436,7 +447,7 @@ export default function App() {
 
   if ((loading && status === 'NGOẠI TUYẾN') || !libsReady) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0f172a] gap-4" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0f172a] font-['Be_Vietnam_Pro'] gap-4" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <svg className="animate-spin text-orange-500 w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"></circle>
@@ -656,7 +667,24 @@ export default function App() {
                         <input className="text-right font-black text-orange-600 outline-none bg-slate-50 px-2 py-2 rounded-xl w-full focus:ring-2 focus:ring-orange-200 focus:bg-white transition" value={formatNumber(item.value)} onChange={(e) => { const n = [...chartData]; n[idx].value = parseNumber(e.target.value); setChartData(n); syncToFirebase({chartData: n}); }} />
                       </td>
                       <td className="py-3 text-right pl-2">
-                        <input placeholder="+0" className="w-full text-right font-bold text-emerald-600 bg-emerald-50 px-2 py-2 rounded-xl outline-none border border-emerald-100 focus:ring-2 focus:ring-emerald-200 focus:bg-white transition" onBlur={(e) => { const v = parseNumber(e.currentTarget.value); if(v>0){ const n=[...chartData]; n[idx].value+=v; setChartData(n); syncToFirebase({chartData:n}); e.currentTarget.value=''; } }} />
+                        <input 
+                          placeholder="+0" 
+                          className="w-full text-right font-bold text-emerald-600 bg-emerald-50 px-2 py-2 rounded-xl outline-none border border-emerald-100 focus:ring-2 focus:ring-emerald-200 focus:bg-white transition" 
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/[^0-9]/g, '');
+                            e.target.value = raw ? '+' + formatNumber(parseInt(raw)) : '';
+                          }}
+                          onBlur={(e) => { 
+                            const v = parseNumber(e.currentTarget.value); 
+                            if(v>0){ 
+                              const n=[...chartData]; 
+                              n[idx].value+=v; 
+                              setChartData(n); 
+                              syncToFirebase({chartData:n}); 
+                              e.currentTarget.value=''; 
+                            } 
+                          }} 
+                        />
                       </td>
                       <td className="text-right pl-2">
                         <button onClick={() => { const n = chartData.filter((_, i) => i !== idx); setChartData(n); syncToFirebase({chartData: n}); }} className="text-slate-300 hover:text-red-500 bg-slate-50 p-2 rounded-xl hover:bg-red-50 transition"><IconX size={14} /></button>
