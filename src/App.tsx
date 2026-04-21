@@ -35,15 +35,13 @@ interface ReportVersion {
 
 // Hàm hỗ trợ tính toán thời gian chuẩn Việt Nam và format Tên Tuần
 const getVNWeekInfo = () => {
-  // Lấy thời gian hiện tại chuẩn múi giờ VN (GMT+7)
   const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
   const day = now.getDay();
-  // Tính thứ 2 của tuần này (Chủ nhật day = 0 sẽ lùi 6 ngày)
   const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
   
   const monday = new Date(now);
   monday.setDate(diffToMonday);
-  monday.setHours(0, 0, 0, 0); // Reset giờ phút giây
+  monday.setHours(0, 0, 0, 0);
   
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
@@ -89,14 +87,21 @@ export default function App() {
   
   // TÍNH NĂNG RESIZER: State lưu phần trăm độ rộng của cột trái
   const [leftColWidth, setLeftColWidth] = useState(58);
+  const [triggerSyncWidth, setTriggerSyncWidth] = useState(0);
 
-  // App Data State (Đóng vai trò là báo cáo gần nhất đang được thao tác)
+  // App Data State
   const [headerTitle, setHeaderTitle] = useState('BÁO CÁO CHIẾN DỊCH TRUYỀN THÔNG');
   const [projectInfo, setProjectInfo] = useState('DỰ ÁN: THE WIN CITY | TUẦN 14 - 2026');
   const [reportDate, setReportDate] = useState('15/04/2026');
   const [chartMainTitle, setChartMainTitle] = useState('BÁO CÁO NGÂN SÁCH');
   const [chartSubTitle, setChartSubTitle] = useState('Phân bổ thực tế');
   const [masterBudget, setMasterBudget] = useState(6230000000);
+  
+  // Nhãn tuỳ biến (để đồng bộ tự động)
+  const [labelBudget, setLabelBudget] = useState('DỰ KIẾN (VNĐ)');
+  const [labelUsed, setLabelUsed] = useState('ĐÃ CHI (VNĐ)');
+  const [labelRemain, setLabelRemain] = useState('CÒN LẠI (VNĐ)');
+
   const [chartData, setChartData] = useState<ChartItem[]>([
     { label: 'Tháng 10/2025', value: 45178560 },
     { label: 'Tháng 11/2025', value: 89132400 },
@@ -117,7 +122,6 @@ export default function App() {
   // Versions State
   const [savedVersions, setSavedVersions] = useState<ReportVersion[]>([]);
 
-  const mainSlideRef = useRef<HTMLDivElement>(null);
   const chartCanvasRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<any>(null);
   
@@ -138,7 +142,11 @@ export default function App() {
     };
 
     const handleMouseUp = () => {
-      isResizingRef.current = false;
+      if (isResizingRef.current) {
+        isResizingRef.current = false;
+        // Bắn tín hiệu để kích hoạt đồng bộ độ rộng cột lên Firebase
+        setTriggerSyncWidth(Date.now());
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -149,7 +157,7 @@ export default function App() {
     };
   }, []);
 
-  // 0. Thu phóng (Auto-Scale) vừa màn hình
+  // 0. Thu phóng (Auto-Scale)
   useEffect(() => {
     const calculateScale = () => {
       const scaleX = window.innerWidth / 1280;
@@ -163,7 +171,7 @@ export default function App() {
     return () => window.removeEventListener('resize', calculateScale);
   }, []);
 
-  // 1. Nạp thư viện ngoài
+  // 1. Nạp thư viện
   useEffect(() => {
     const loadScript = (url: string) => {
       return new Promise((resolve) => {
@@ -188,7 +196,7 @@ export default function App() {
     initLibs();
   }, []);
 
-  // 2. Logic Xác thực Firebase
+  // 2. Xác thực Firebase
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -224,17 +232,15 @@ export default function App() {
       if (snapshot.exists()) {
         const data = snapshot.data();
         
-        // KIỂM TRA ĐỂ TỰ ĐỘNG LƯU BÁO CÁO CŨ NẾU SANG TUẦN MỚI
+        // AUTO ARCHIVE
         const weekInfo = getVNWeekInfo();
         if (!data.currentWeekId) {
-          // Lần đầu tiên chạy
           setDoc(docRef, { currentWeekId: weekInfo.id, currentWeekName: weekInfo.name }, { merge: true });
         } else if (data.currentWeekId !== weekInfo.id && data.currentWeekId < weekInfo.id) {
-          // ĐÃ SANG TUẦN MỚI -> Archive bản cũ thành Lịch Sử
           const archivedVersion: ReportVersion = {
             id: Date.now().toString(),
             timestamp: Date.now(),
-            name: data.currentWeekName || `Báo cáo tuần trước`, // Tên VD: Tuần 15/04 - 21/04/2026
+            name: data.currentWeekName || `Báo cáo tuần trước`,
             payload: {
               headerTitle: data.headerTitle || '',
               projectInfo: data.projectInfo || '',
@@ -244,12 +250,15 @@ export default function App() {
               masterBudget: data.masterBudget || 0,
               chartData: data.chartData || [],
               activities: data.activities || [],
-              activityFontSize: data.activityFontSize || 1
+              activityFontSize: data.activityFontSize || 1,
+              labelBudget: data.labelBudget || 'DỰ KIẾN (VNĐ)',
+              labelUsed: data.labelUsed || 'ĐÃ CHI (VNĐ)',
+              labelRemain: data.labelRemain || 'CÒN LẠI (VNĐ)',
+              leftColWidth: data.leftColWidth || 58
             }
           };
           const updatedVersions = [archivedVersion, ...(data.savedVersions || [])];
           
-          // Cập nhật Database: chèn bản lưu, và nâng cấp Tuần Hiện Tại lên tuần mới
           setDoc(docRef, { 
             savedVersions: updatedVersions,
             currentWeekId: weekInfo.id,
@@ -268,8 +277,11 @@ export default function App() {
         if (data.activities) setActivities(data.activities);
         if (data.activityFontSize) setActivityFontSize(data.activityFontSize);
         if (data.savedVersions) setSavedVersions(data.savedVersions);
+        if (data.labelBudget) setLabelBudget(data.labelBudget);
+        if (data.labelUsed) setLabelUsed(data.labelUsed);
+        if (data.labelRemain) setLabelRemain(data.labelRemain);
+        if (data.leftColWidth) setLeftColWidth(data.leftColWidth);
       } else {
-        // Init nếu Doc chưa có
         const weekInfo = getVNWeekInfo();
         setDoc(docRef, { currentWeekId: weekInfo.id, currentWeekName: weekInfo.name }, { merge: true });
       }
@@ -285,7 +297,6 @@ export default function App() {
   const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   const parseNumber = (str: string) => parseInt(str.toString().replace(/\./g, '')) || 0;
   
-  // Hàm format tiền chuẩn xác, giữ nguyên dấu chấm phân cách hàng nghìn
   const smartFormat = (v: number) => {
     if (v >= 1000000000) {
       const val = v / 1000000000;
@@ -294,7 +305,6 @@ export default function App() {
     if (v >= 1000000 && v % 1000000 === 0) {
       return (v / 1000000).toLocaleString('vi-VN') + ' tr';
     }
-    // Hiển thị đầy đủ số có dấu chấm ngăn cách hàng nghìn cho các số lẻ (VD: 45.178.560)
     return formatNumber(v);
   };
 
@@ -357,7 +367,6 @@ export default function App() {
               anchor: 'end',
               offset: 12,
               color: '#1e293b',
-              // KHÔNG in đậm cho số liệu trên thanh biểu đồ
               font: { family: 'Be Vietnam Pro', weight: 'normal', size: 9 },
               formatter: (v: number) => smartFormat(v),
               clip: false
@@ -367,7 +376,6 @@ export default function App() {
             x: { 
               beginAtZero: true, 
               grid: { color: '#f1f5f9', drawBorder: false },
-              // KHÔNG in đậm cho trục X
               ticks: { font: { family: 'Be Vietnam Pro', size: 9, weight: 'normal' }, callback: (v: any) => smartFormat(v) }
             },
             y: { 
@@ -385,7 +393,7 @@ export default function App() {
     }
   }, [libsReady, chartData]);
 
-  // Đồng bộ Auto-Save Firestore
+  // Đồng bộ Auto-Save Firestore chính
   const syncToFirebase = async (updates: any = {}) => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'budget', 'dashboard');
@@ -400,6 +408,10 @@ export default function App() {
         chartData,
         activities,
         activityFontSize,
+        labelBudget,
+        labelUsed,
+        labelRemain,
+        leftColWidth,
         lastUpdated: new Date().toISOString(),
         ...updates
       }, { merge: true });
@@ -408,9 +420,16 @@ export default function App() {
     }
   };
 
+  // Kích hoạt đồng bộ độ rộng cột khi resize xong
+  useEffect(() => {
+    if (triggerSyncWidth > 0) {
+      syncToFirebase({ leftColWidth });
+    }
+  }, [triggerSyncWidth]);
+
   const usedSum = chartData.reduce((acc, curr) => acc + (curr.value || 0), 0);
 
-  // Tính năng Khôi phục/Tải phiên bản báo cáo cũ vào bản nháp hiện tại
+  // Tính năng Khôi phục/Tải phiên bản báo cáo cũ
   const handleLoadVersion = (version: ReportVersion) => {
     const p = version.payload;
     setHeaderTitle(p.headerTitle);
@@ -422,6 +441,10 @@ export default function App() {
     setChartData(p.chartData);
     setActivities(p.activities);
     setActivityFontSize(p.activityFontSize || 1);
+    setLabelBudget(p.labelBudget || 'DỰ KIẾN (VNĐ)');
+    setLabelUsed(p.labelUsed || 'ĐÃ CHI (VNĐ)');
+    setLabelRemain(p.labelRemain || 'CÒN LẠI (VNĐ)');
+    setLeftColWidth(p.leftColWidth || 58);
     
     // Ghi đè Auto-Save hiện tại
     syncToFirebase({
@@ -433,7 +456,11 @@ export default function App() {
       masterBudget: p.masterBudget,
       chartData: p.chartData,
       activities: p.activities,
-      activityFontSize: p.activityFontSize || 1
+      activityFontSize: p.activityFontSize || 1,
+      labelBudget: p.labelBudget || 'DỰ KIẾN (VNĐ)',
+      labelUsed: p.labelUsed || 'ĐÃ CHI (VNĐ)',
+      labelRemain: p.labelRemain || 'CÒN LẠI (VNĐ)',
+      leftColWidth: p.leftColWidth || 58
     });
     
     setShowHistoryDrawer(false);
@@ -447,7 +474,7 @@ export default function App() {
 
   if ((loading && status === 'NGOẠI TUYẾN') || !libsReady) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0f172a] font-['Be_Vietnam_Pro'] gap-4" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0f172a] gap-4" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <svg className="animate-spin text-orange-500 w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"></circle>
@@ -515,7 +542,6 @@ export default function App() {
         }}>
           {/* Main Slide Content */}
           <div 
-            ref={mainSlideRef} 
             className="slide-container shadow-2xl text-left"
             style={{
               width: '100%',
@@ -610,7 +636,7 @@ export default function App() {
                     </p>
                   </div>
                   <div className="budget-card-slim shadow-sm flex-none text-left shrink-0">
-                    <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1 text-left" contentEditable suppressContentEditableWarning>DỰ KIẾN (VNĐ)</h3>
+                    <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1 text-left" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelBudget(e.currentTarget.innerText); syncToFirebase({labelBudget: e.currentTarget.innerText}); }}>{labelBudget}</h3>
                     <input className="number-input-main" value={formatNumber(masterBudget)} onChange={(e) => { const v = parseNumber(e.target.value); setMasterBudget(v); syncToFirebase({masterBudget: v}); }} />
                   </div>
                 </div>
@@ -623,11 +649,11 @@ export default function App() {
 
                 <div className="mt-6 flex gap-3 px-2 overflow-visible shrink-0">
                   <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-1 min-w-0 overflow-visible text-left">
-                    <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>ĐÃ CHI (VNĐ)</p>
+                    <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelUsed(e.currentTarget.innerText); syncToFirebase({labelUsed: e.currentTarget.innerText}); }}>{labelUsed}</p>
                     <p className="adaptive-value font-black text-slate-900 text-left">{formatNumber(usedSum)}</p>
                   </div>
                   <div className="bg-emerald-600 rounded-2xl p-5 shadow-xl shadow-emerald-100/50 text-white flex-1 min-w-0 overflow-visible text-left">
-                    <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>CÒN LẠI (VNĐ)</p>
+                    <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelRemain(e.currentTarget.innerText); syncToFirebase({labelRemain: e.currentTarget.innerText}); }}>{labelRemain}</p>
                     <p className="adaptive-value font-black text-white text-left">{formatNumber(masterBudget - usedSum)}</p>
                   </div>
                 </div>
