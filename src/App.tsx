@@ -549,7 +549,6 @@ export default function App() {
               background: 'white',
               display: 'flex',
               flexDirection: 'column',
-              userSelect: 'none',
               overflow: 'hidden',
               textAlign: 'left'
             }}
@@ -557,16 +556,16 @@ export default function App() {
             <header className="flex items-center justify-between px-10 py-5 flex-none border-b border-slate-50 bg-slate-50/30 overflow-visible text-left">
               <div className="flex items-center gap-6 flex-none">
                 <div className="bg-orange-600 text-white px-8 py-2.5 rounded-full shadow-lg shadow-orange-50">
-                  <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText); syncToFirebase({headerTitle: e.currentTarget.innerText}); }} className="text-xl font-black tracking-tighter uppercase editable leading-none">
+                  <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.textContent || ''); syncToFirebase({headerTitle: e.currentTarget.textContent || ''}); }} className="text-xl font-black tracking-tighter uppercase editable leading-none">
                     {headerTitle}
                   </h1>
                 </div>
-                <p contentEditable suppressContentEditableWarning onBlur={(e) => { setProjectInfo(e.currentTarget.innerText); syncToFirebase({projectInfo: e.currentTarget.innerText}); }} className="text-orange-600 font-bold text-[10px] tracking-[0.2em] editable uppercase leading-none">
+                <p contentEditable suppressContentEditableWarning onBlur={(e) => { setProjectInfo(e.currentTarget.textContent || ''); syncToFirebase({projectInfo: e.currentTarget.textContent || ''}); }} className="text-orange-600 font-bold text-[10px] tracking-[0.2em] editable uppercase leading-none">
                   {projectInfo}
                 </p>
               </div>
               <div className="text-right flex-none">
-                <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 editable leading-none">
+                <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.textContent || ''); syncToFirebase({reportDate: e.currentTarget.textContent || ''}); }} className="text-lg font-bold text-slate-700 editable leading-none">
                   {reportDate}
                 </div>
               </div>
@@ -595,14 +594,14 @@ export default function App() {
                 <div className="space-y-1 flex-1 overflow-y-auto pr-4 custom-scroll text-left min-h-0" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
                   {activities.map((act, idx) => (
                     <div key={idx} className="activity-block group text-left">
-                      <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-num editable text-left">
+                      <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.textContent || ''; setActivities(n); syncToFirebase({activities: n}); }} className="activity-num editable text-left">
                         {act.num}
                       </div>
                       <div className="activity-content text-left">
-                        <h3 contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].title = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-title editable text-left">
+                        <h3 contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].title = e.currentTarget.textContent || ''; setActivities(n); syncToFirebase({activities: n}); }} className="activity-title editable text-left">
                           {act.title}
                         </h3>
-                        <p contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].desc = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-desc editable text-left">
+                        <p contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].desc = e.currentTarget.textContent || ''; setActivities(n); syncToFirebase({activities: n}); }} className="activity-desc editable text-left">
                           {act.desc}
                         </p>
                       </div>
@@ -628,15 +627,15 @@ export default function App() {
                 
                 <div className="flex items-start justify-between mb-8 px-2 gap-4 shrink-0">
                   <div className="flex flex-col gap-1 min-w-0 flex-1 overflow-visible text-left">
-                    <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.innerText); syncToFirebase({chartMainTitle: e.currentTarget.innerText}); }} className="text-xl font-black text-slate-800 tracking-tighter uppercase editable leading-none text-left">
+                    <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.textContent || ''); syncToFirebase({chartMainTitle: e.currentTarget.textContent || ''}); }} className="text-xl font-black text-slate-800 tracking-tighter uppercase editable leading-none text-left">
                       {chartMainTitle}
                     </h2>
-                    <p contentEditable suppressContentEditableWarning onBlur={(e) => { setChartSubTitle(e.currentTarget.innerText); syncToFirebase({chartSubTitle: e.currentTarget.innerText}); }} className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic editable leading-none text-left">
+                    <p contentEditable suppressContentEditableWarning onBlur={(e) => { setChartSubTitle(e.currentTarget.textContent || ''); syncToFirebase({chartSubTitle: e.currentTarget.textContent || ''}); }} className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic editable leading-none text-left">
                       {chartSubTitle}
                     </p>
                   </div>
                   <div className="budget-card-slim shadow-sm flex-none text-left shrink-0">
-                    <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1 text-left" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelBudget(e.currentTarget.innerText); syncToFirebase({labelBudget: e.currentTarget.innerText}); }}>{labelBudget}</h3>
+                    <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1 text-left inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelBudget(e.currentTarget.textContent || ''); syncToFirebase({labelBudget: e.currentTarget.textContent || ''}); }}>{labelBudget}</h3>
                     <input className="number-input-main" value={formatNumber(masterBudget)} onChange={(e) => { const v = parseNumber(e.target.value); setMasterBudget(v); syncToFirebase({masterBudget: v}); }} />
                   </div>
                 </div>
@@ -649,11 +648,11 @@ export default function App() {
 
                 <div className="mt-6 flex gap-3 px-2 overflow-visible shrink-0">
                   <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-1 min-w-0 overflow-visible text-left">
-                    <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelUsed(e.currentTarget.innerText); syncToFirebase({labelUsed: e.currentTarget.innerText}); }}>{labelUsed}</p>
+                    <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none text-left inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelUsed(e.currentTarget.textContent || ''); syncToFirebase({labelUsed: e.currentTarget.textContent || ''}); }}>{labelUsed}</p>
                     <p className="adaptive-value font-black text-slate-900 text-left">{formatNumber(usedSum)}</p>
                   </div>
                   <div className="bg-emerald-600 rounded-2xl p-5 shadow-xl shadow-emerald-100/50 text-white flex-1 min-w-0 overflow-visible text-left">
-                    <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelRemain(e.currentTarget.innerText); syncToFirebase({labelRemain: e.currentTarget.innerText}); }}>{labelRemain}</p>
+                    <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelRemain(e.currentTarget.textContent || ''); syncToFirebase({labelRemain: e.currentTarget.textContent || ''}); }}>{labelRemain}</p>
                     <p className="adaptive-value font-black text-white text-left">{formatNumber(masterBudget - usedSum)}</p>
                   </div>
                 </div>
@@ -784,20 +783,26 @@ export default function App() {
         }
         
         .editable { 
-            user-select: text; 
+            user-select: text !important; 
             white-space: pre-wrap; 
             word-break: break-word;
             line-height: 1.2;
             text-align: left;
+            outline: none;
+            padding: 2px 4px;
+            margin: -2px -4px;
+            border-radius: 4px;
+            display: inline-block;
+            min-width: 20px;
+            transition: all 0.2s;
         }
         .editable:hover {
-            background-color: #fff7ed;
-            border-radius: 4px;
+            background-color: rgba(234, 88, 12, 0.05);
             cursor: text;
         }
         .editable:focus {
-            outline: none;
-            border-bottom: 2px solid #ea580c;
+            background-color: #fff7ed;
+            box-shadow: 0 0 0 1px #fdba74;
         }
 
         .activity-block {
