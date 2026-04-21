@@ -4,7 +4,7 @@ import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 /**
- * Biểu tượng SVG tích hợp sẵn để tránh lỗi render và nạp script ngoài
+ * Biểu tượng SVG tích hợp sẵn
  */
 const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 const IconPrinter = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>;
@@ -70,13 +70,13 @@ export default function App() {
   const chartCanvasRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<any>(null);
 
-  // 1. Nạp thư viện ngoài theo thứ tự chính xác (Sửa lỗi 'helpers' of undefined)
+  // 1. Nạp thư viện ngoài theo thứ tự chính xác
   useEffect(() => {
     const loadScript = (url: string) => {
       return new Promise((resolve) => {
         const script = document.createElement('script');
         script.src = url;
-        script.async = false; // Nạp đồng bộ theo thứ tự
+        script.async = false; 
         script.crossOrigin = "anonymous";
         script.onload = () => resolve(true);
         script.onerror = () => resolve(false);
@@ -85,10 +85,7 @@ export default function App() {
     };
 
     const initLibs = async () => {
-      // BƯỚC 1: Phải nạp Chart.js trước tiên
       const chartLoaded = await loadScript('https://cdn.jsdelivr.net/npm/chart.js');
-      
-      // BƯỚC 2: Sau khi Chart.js nạp xong, mới nạp Plugin và các thư viện khác
       if (chartLoaded) {
         await loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2');
         await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
@@ -126,7 +123,7 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // 3. Lắng nghe Firestore (6 segments path)
+  // 3. Lắng nghe Firestore
   useEffect(() => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'budget', 'dashboard');
@@ -151,10 +148,17 @@ export default function App() {
     return () => unsubscribe();
   }, [user]);
 
-  // 4. Khởi tạo Biểu đồ (Dùng Vanilla Chart.js để tránh xung đột plugin)
+  // Hàm định dạng số tiền
+  const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const parseNumber = (str: string) => parseInt(str.toString().replace(/\./g, '')) || 0;
+  const smartFormat = (v: number) => {
+    if (v >= 1000000000) return (v / 1000000000).toFixed(1).replace('.0', '') + ' Tỷ';
+    return (v / 1000000) + ' Tr';
+  };
+
+  // 4. Khởi tạo Biểu đồ ĐẸP MẮT & CHUẨN XÁC
   useEffect(() => {
     if (libsReady && chartCanvasRef.current && chartData.length > 0) {
-      // Hủy biểu đồ cũ nếu tồn tại
       if (chartInstanceRef.current) {
         chartInstanceRef.current.destroy();
       }
@@ -169,6 +173,10 @@ export default function App() {
       const ctx = chartCanvasRef.current.getContext('2d');
       if (!ctx) return;
 
+      // Tính toán giá trị lớn nhất để thêm khoảng trống bên phải cho datalabel không bị cắt
+      const maxValue = Math.max(...chartData.map(d => d.value));
+      const axisMax = maxValue * 1.25;
+
       chartInstanceRef.current = new Chart(ctx, {
         type: 'bar',
         plugins: [ChartDataLabels],
@@ -176,8 +184,9 @@ export default function App() {
           labels: chartData.map(d => d.label),
           datasets: [{
             data: chartData.map(d => d.value),
-            backgroundColor: 'rgba(234, 88, 12, 0.6)',
-            borderRadius: 14,
+            backgroundColor: '#ea580c', // Màu cam chuẩn Tailwind orange-600
+            borderRadius: 8,
+            barPercentage: 0.65, // Độ dày của cột chuẩn xác hơn
             borderSkipped: false,
           }]
         },
@@ -185,26 +194,38 @@ export default function App() {
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: { right: 40 } // Chừa chỗ cho label
+          },
           plugins: {
             legend: { display: false },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context: any) {
+                  return formatNumber(context.raw) + ' VNĐ';
+                }
+              }
+            },
             datalabels: {
-              align: 'end',
+              align: 'right',
               anchor: 'end',
-              offset: 12,
-              color: '#1e293b',
-              font: { family: 'Be Vietnam Pro', weight: '800', size: 10 },
+              offset: 8,
+              color: '#ea580c', // Label đồng màu với cột
+              font: { family: 'Be Vietnam Pro', weight: 'bold', size: 13 },
               formatter: (v: number) => smartFormat(v)
             }
           },
           scales: {
             x: { 
               beginAtZero: true, 
-              grid: { color: '#f1f5f9' },
-              ticks: { font: { family: 'Be Vietnam Pro', size: 9 }, callback: (v: any) => smartFormat(v) }
+              max: axisMax, // Mở rộng không gian trục X
+              grid: { color: '#f1f5f9', drawBorder: false },
+              ticks: { font: { family: 'Be Vietnam Pro', size: 11, weight: '500' }, color: '#64748b', callback: (v: any) => smartFormat(v) }
             },
             y: { 
-              grid: { display: false },
-              ticks: { font: { family: 'Be Vietnam Pro', weight: '800', size: 10 } }
+              grid: { display: false, drawBorder: false },
+              ticks: { font: { family: 'Be Vietnam Pro', weight: 'bold', size: 12 }, color: '#334155' }
             }
           }
         }
@@ -233,13 +254,6 @@ export default function App() {
     } catch (error) {
       console.error("Firestore Save Error:", error);
     }
-  };
-
-  const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  const parseNumber = (str: string) => parseInt(str.toString().replace(/\./g, '')) || 0;
-  const smartFormat = (v: number) => {
-    if (v >= 1000000000) return (v / 1000000000).toFixed(1).replace('.0', '') + ' Tỷ';
-    return (v / 1000000) + ' Tr';
   };
 
   const usedSum = chartData.reduce((acc, curr) => acc + (curr.value || 0), 0);
@@ -282,10 +296,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 overflow-hidden font-['Be_Vietnam_Pro']">
+    // THAY ĐỔI QUAN TRỌNG: overflow-auto thay vì overflow-hidden để trên Vercel không bị mất nội dung
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-8 overflow-auto dashboard-root">
       
-      <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-
       {exporting && (
         <div className="fixed inset-0 bg-slate-900/90 z-[9999] flex flex-col items-center justify-center text-white backdrop-blur-sm">
           <IconLoader className="animate-spin h-12 w-12 text-orange-500 mb-4" />
@@ -306,16 +319,19 @@ export default function App() {
         </button>
       </div>
 
-      {/* Main Slide Content */}
-      <div ref={mainSlideRef} className="bg-white w-[1280px] h-[720px] shadow-2xl relative flex flex-col overflow-hidden">
-        <header className="flex items-center justify-between px-10 py-6 border-b border-slate-50 bg-slate-50/50">
+      {/* Main Slide Content - THAY ĐỔI QUAN TRỌNG: min-w-[1280px] min-h-[720px] shrink-0 để không bị bóp méo */}
+      <div 
+        ref={mainSlideRef} 
+        className="bg-white w-[1280px] h-[720px] min-w-[1280px] min-h-[720px] shrink-0 shadow-2xl relative flex flex-col overflow-hidden"
+      >
+        <header className="flex items-center justify-between px-10 py-6 border-b border-slate-50 bg-slate-50/50 shrink-0">
           <div className="flex items-center gap-6">
             <div className="bg-orange-600 text-white px-8 py-3 rounded-full shadow-lg shadow-orange-100">
-              <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText); syncToFirebase({headerTitle: e.currentTarget.innerText}); }} className="text-xl font-black tracking-tighter uppercase outline-none">
+              <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText); syncToFirebase({headerTitle: e.currentTarget.innerText}); }} className="text-xl font-black tracking-tighter uppercase outline-none whitespace-nowrap">
                 {headerTitle}
               </h1>
             </div>
-            <p contentEditable suppressContentEditableWarning onBlur={(e) => { setProjectInfo(e.currentTarget.innerText); syncToFirebase({projectInfo: e.currentTarget.innerText}); }} className="text-orange-600 font-bold text-[10px] tracking-[0.2em] uppercase outline-none">
+            <p contentEditable suppressContentEditableWarning onBlur={(e) => { setProjectInfo(e.currentTarget.innerText); syncToFirebase({projectInfo: e.currentTarget.innerText}); }} className="text-orange-600 font-bold text-[10px] tracking-[0.2em] uppercase outline-none whitespace-nowrap">
               {projectInfo}
             </p>
           </div>
@@ -323,7 +339,7 @@ export default function App() {
             <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${status === 'ĐÃ KẾT NỐI' ? 'text-emerald-500' : 'text-slate-300'}`}>
               {status}
             </div>
-            <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 outline-none">
+            <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 outline-none whitespace-nowrap">
               {reportDate}
             </div>
           </div>
@@ -331,8 +347,8 @@ export default function App() {
 
         <div className="flex flex-1 overflow-hidden">
           {/* Activity Column */}
-          <div className="flex flex-col p-10 border-r border-slate-100" style={{ flex: '0 0 58%' }}>
-            <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col p-10 border-r border-slate-100 h-full" style={{ flex: '0 0 58%' }}>
+            <div className="flex justify-between items-center mb-8 shrink-0">
               <h2 className="text-[12px] font-black text-slate-900 tracking-widest uppercase flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-orange-600"></span> Hoạt động triển khai tuần vừa qua
               </h2>
@@ -347,7 +363,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="space-y-4 overflow-y-auto pr-4 custom-scroll">
+            <div className="space-y-5 overflow-y-auto pr-4 custom-scroll pb-10">
               {activities.map((act, idx) => (
                 <div key={idx} className="flex items-start gap-6 relative group">
                   <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="font-black text-orange-600 leading-none outline-none" style={{ fontSize: `${3 * activityFontSize}rem`, minWidth: '70px' }}>
@@ -370,36 +386,36 @@ export default function App() {
           </div>
 
           {/* Chart & Budget Column */}
-          <div className="flex-1 p-10 flex flex-col bg-slate-50/30">
-            <div className="flex justify-between items-start mb-10">
+          <div className="flex-1 p-10 flex flex-col bg-slate-50/30 h-full">
+            <div className="flex justify-between items-start mb-8 shrink-0">
               <div className="flex flex-col gap-1">
-                <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.innerText); syncToFirebase({chartMainTitle: e.currentTarget.innerText}); }} className="text-2xl font-black text-slate-800 tracking-tighter uppercase outline-none">{chartMainTitle}</h2>
-                <p contentEditable suppressContentEditableWarning onBlur={(e) => { setChartSubTitle(e.currentTarget.innerText); syncToFirebase({chartSubTitle: e.currentTarget.innerText}); }} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic outline-none">{chartSubTitle}</p>
+                <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.innerText); syncToFirebase({chartMainTitle: e.currentTarget.innerText}); }} className="text-2xl font-black text-slate-800 tracking-tighter uppercase outline-none whitespace-nowrap">{chartMainTitle}</h2>
+                <p contentEditable suppressContentEditableWarning onBlur={(e) => { setChartSubTitle(e.currentTarget.innerText); syncToFirebase({chartSubTitle: e.currentTarget.innerText}); }} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic outline-none whitespace-nowrap">{chartSubTitle}</p>
               </div>
-              <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm text-right">
+              <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm text-right shrink-0">
                 <p className="text-[8px] font-black text-slate-400 uppercase mb-1">DỰ KIẾN (VNĐ)</p>
                 <input className="text-xl font-black text-orange-600 bg-transparent text-right outline-none w-40" value={formatNumber(masterBudget)} onChange={(e) => { const v = parseNumber(e.target.value); setMasterBudget(v); syncToFirebase({masterBudget: v}); }} />
               </div>
             </div>
 
-            <div className="flex-1 bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm relative min-h-0">
+            <div className="flex-1 bg-white rounded-[40px] p-6 border border-slate-100 shadow-sm relative min-h-0">
               <canvas ref={chartCanvasRef}></canvas>
             </div>
 
-            <div className="mt-8 flex gap-4">
+            <div className="mt-8 flex gap-4 shrink-0">
               <div className="bg-white border border-slate-100 p-6 rounded-3xl flex-1 shadow-sm">
                 <p className="text-[9px] font-black text-slate-400 uppercase mb-2">ĐÃ CHI (VNĐ)</p>
-                <p className="text-xl font-black text-slate-900">{formatNumber(usedSum)}</p>
+                <p className="text-xl font-black text-slate-900 truncate">{formatNumber(usedSum)}</p>
               </div>
               <div className="bg-emerald-600 p-6 rounded-3xl flex-1 shadow-xl shadow-emerald-100">
                 <p className="text-[9px] font-black text-emerald-100 uppercase mb-2">CÒN LẠI (VNĐ)</p>
-                <p className="text-xl font-black text-white">{formatNumber(masterBudget - usedSum)}</p>
+                <p className="text-xl font-black text-white truncate">{formatNumber(masterBudget - usedSum)}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="h-3 bg-orange-600 w-full"></div>
+        <div className="h-3 bg-orange-600 w-full shrink-0"></div>
       </div>
 
       {/* Data Editor Drawer */}
@@ -447,9 +463,17 @@ export default function App() {
         </div>
       )}
 
+      {/* Font & Global Styling được nạp cứng qua CSS */}
       <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap');
+        
+        .dashboard-root, .dashboard-root * {
+          font-family: 'Be Vietnam Pro', sans-serif !important;
+        }
+        
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        
         @media print {
           body { background: white !important; padding: 0 !important; }
           .min-h-screen { background: white !important; }
