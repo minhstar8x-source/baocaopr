@@ -8,12 +8,10 @@ import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
  */
 const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 const IconPrinter = ({ size = 18 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>;
-const IconImage = ({ size = 18 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>;
 const IconEdit = ({ size = 18 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>;
 const IconX = ({ size = 16 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 const IconLoader = ({ className }: { className?: string }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>;
 const IconMenu = ({ size = 20 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
-const IconSave = ({ size = 16 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>;
 const IconHistory = ({ size = 16 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
 const IconTrash = ({ size = 16 }: { size?: number }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
 
@@ -36,6 +34,31 @@ interface ReportVersion {
   payload: any;
 }
 
+// Hàm hỗ trợ tính toán thời gian chuẩn Việt Nam và format Tên Tuần
+const getVNWeekInfo = () => {
+  // Lấy thời gian hiện tại chuẩn múi giờ VN (GMT+7)
+  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+  const day = now.getDay();
+  // Tính thứ 2 của tuần này (Chủ nhật day = 0 sẽ lùi 6 ngày)
+  const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+  
+  const monday = new Date(now);
+  monday.setDate(diffToMonday);
+  monday.setHours(0, 0, 0, 0); // Reset giờ phút giây
+  
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const dateStr = (d: Date) => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  const fullStr = (d: Date) => `${dateStr(d)}/${d.getFullYear()}`;
+  
+  return {
+    id: `${monday.getFullYear()}-${pad(monday.getMonth()+1)}-${pad(monday.getDate())}`,
+    name: `Tuần ${dateStr(monday)} - ${fullStr(sunday)}`
+  };
+};
+
 // Cấu hình Firebase
 // @ts-ignore
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
@@ -56,7 +79,6 @@ const db = getFirestore(firebaseApp);
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
   const [status, setStatus] = useState('NGOẠI TUYẾN');
   const [libsReady, setLibsReady] = useState(false);
   const [scale, setScale] = useState(1);
@@ -64,14 +86,12 @@ export default function App() {
   // UI States
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
-  const [newVersionName, setNewVersionName] = useState('');
   
   // TÍNH NĂNG RESIZER: State lưu phần trăm độ rộng của cột trái
   const [leftColWidth, setLeftColWidth] = useState(58);
 
-  // App Data State
+  // App Data State (Đóng vai trò là báo cáo gần nhất đang được thao tác)
   const [headerTitle, setHeaderTitle] = useState('BÁO CÁO CHIẾN DỊCH TRUYỀN THÔNG');
   const [projectInfo, setProjectInfo] = useState('DỰ ÁN: THE WIN CITY | TUẦN 14 - 2026');
   const [reportDate, setReportDate] = useState('15/04/2026');
@@ -135,7 +155,6 @@ export default function App() {
     const calculateScale = () => {
       const scaleX = window.innerWidth / 1280;
       const scaleY = window.innerHeight / 720;
-      // Dùng Math.min để luôn thấy hết được toàn bộ nội dung mà không bị cắt
       const newScale = Math.min(scaleX, scaleY);
       setScale(newScale);
     };
@@ -145,7 +164,7 @@ export default function App() {
     return () => window.removeEventListener('resize', calculateScale);
   }, []);
 
-  // 1. Nạp thư viện ngoài
+  // 1. Nạp thư viện ngoài (Đã lược bỏ html2canvas theo yêu cầu)
   useEffect(() => {
     const loadScript = (url: string) => {
       return new Promise((resolve) => {
@@ -163,7 +182,6 @@ export default function App() {
       const chartLoaded = await loadScript('https://cdn.jsdelivr.net/npm/chart.js');
       if (chartLoaded) {
         await loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0');
-        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
         setLibsReady(true);
       }
     };
@@ -198,13 +216,49 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // 3. Lắng nghe Firestore
+  // 3. Lắng nghe Firestore & TỰ ĐỘNG CHỐT PHIÊN BẢN THEO TUẦN (Auto-Archive)
   useEffect(() => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'budget', 'dashboard');
+    
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
+        
+        // KIỂM TRA ĐỂ TỰ ĐỘNG LƯU BÁO CÁO CŨ NẾU SANG TUẦN MỚI
+        const weekInfo = getVNWeekInfo();
+        if (!data.currentWeekId) {
+          // Lần đầu tiên chạy
+          setDoc(docRef, { currentWeekId: weekInfo.id, currentWeekName: weekInfo.name }, { merge: true });
+        } else if (data.currentWeekId !== weekInfo.id && data.currentWeekId < weekInfo.id) {
+          // ĐÃ SANG TUẦN MỚI -> Archive bản cũ thành Lịch Sử
+          const archivedVersion: ReportVersion = {
+            id: Date.now().toString(),
+            timestamp: Date.now(),
+            name: data.currentWeekName || `Báo cáo tuần trước`, // Tên VD: Tuần 15/04 - 21/04/2026
+            payload: {
+              headerTitle: data.headerTitle || '',
+              projectInfo: data.projectInfo || '',
+              reportDate: data.reportDate || '',
+              chartMainTitle: data.chartMainTitle || '',
+              chartSubTitle: data.chartSubTitle || '',
+              masterBudget: data.masterBudget || 0,
+              chartData: data.chartData || [],
+              activities: data.activities || [],
+              activityFontSize: data.activityFontSize || 1
+            }
+          };
+          const updatedVersions = [archivedVersion, ...(data.savedVersions || [])];
+          
+          // Cập nhật Database: chèn bản lưu, và nâng cấp Tuần Hiện Tại lên tuần mới
+          setDoc(docRef, { 
+            savedVersions: updatedVersions,
+            currentWeekId: weekInfo.id,
+            currentWeekName: weekInfo.name
+          }, { merge: true });
+        }
+
+        // TẢI DỮ LIỆU BÁO CÁO MỚI NHẤT RA GIAO DIỆN
         if (data.headerTitle) setHeaderTitle(data.headerTitle);
         if (data.projectInfo) setProjectInfo(data.projectInfo);
         if (data.reportDate) setReportDate(data.reportDate);
@@ -215,12 +269,17 @@ export default function App() {
         if (data.activities) setActivities(data.activities);
         if (data.activityFontSize) setActivityFontSize(data.activityFontSize);
         if (data.savedVersions) setSavedVersions(data.savedVersions);
+      } else {
+        // Init nếu Doc chưa có
+        const weekInfo = getVNWeekInfo();
+        setDoc(docRef, { currentWeekId: weekInfo.id, currentWeekName: weekInfo.name }, { merge: true });
       }
       setLoading(false);
     }, (error) => {
       console.error("Firestore Load Error:", error);
       setLoading(false);
     });
+    
     return () => unsubscribe();
   }, [user]);
 
@@ -316,7 +375,7 @@ export default function App() {
     }
   }, [libsReady, chartData]);
 
-  // Đồng bộ Firestore
+  // Đồng bộ Auto-Save Firestore
   const syncToFirebase = async (updates: any = {}) => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'budget', 'dashboard');
@@ -331,7 +390,6 @@ export default function App() {
         chartData,
         activities,
         activityFontSize,
-        savedVersions,
         lastUpdated: new Date().toISOString(),
         ...updates
       }, { merge: true });
@@ -342,71 +400,7 @@ export default function App() {
 
   const usedSum = chartData.reduce((acc, curr) => acc + (curr.value || 0), 0);
 
-  const handleExportImage = async () => {
-    if (!mainSlideRef.current) return;
-    // @ts-ignore
-    if (!window.html2canvas) {
-      alert("Thư viện đang tải, vui lòng thử lại.");
-      return;
-    }
-    setExporting(true);
-    try {
-      // @ts-ignore
-      const canvas = await window.html2canvas(mainSlideRef.current, {
-        scale: 2, 
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        width: 1280,
-        height: 720,
-        windowWidth: 1280,
-        windowHeight: 720,
-        scrollX: 0,
-        scrollY: 0,
-        x: 0,
-        y: 0,
-        logging: false
-      });
-      const link = document.createElement('a');
-      link.download = `PR-Dashboard-${Date.now()}.png`;
-      link.href = canvas.toDataURL("image/png", 1.0);
-      link.click();
-    } catch (e) {
-      console.error("Export Error:", e);
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // Tính năng Lưu Phiên Bản Báo Cáo
-  const handleSaveVersion = () => {
-    if (!newVersionName.trim()) return;
-    const newVersion: ReportVersion = {
-      id: Date.now().toString(),
-      timestamp: Date.now(),
-      name: newVersionName,
-      payload: {
-        headerTitle,
-        projectInfo,
-        reportDate,
-        chartMainTitle,
-        chartSubTitle,
-        masterBudget,
-        chartData,
-        activities,
-        activityFontSize
-      }
-    };
-    
-    const updatedVersions = [newVersion, ...savedVersions];
-    setSavedVersions(updatedVersions);
-    syncToFirebase({ savedVersions: updatedVersions });
-    
-    setNewVersionName('');
-    setShowSaveModal(false);
-  };
-
-  // Tính năng Khôi phục/Tải phiên bản báo cáo cũ
+  // Tính năng Khôi phục/Tải phiên bản báo cáo cũ vào bản nháp hiện tại
   const handleLoadVersion = (version: ReportVersion) => {
     const p = version.payload;
     setHeaderTitle(p.headerTitle);
@@ -419,7 +413,7 @@ export default function App() {
     setActivities(p.activities);
     setActivityFontSize(p.activityFontSize || 1);
     
-    // Đồng bộ lại lên Firebase để mọi người đều thấy
+    // Ghi đè Auto-Save hiện tại
     syncToFirebase({
       headerTitle: p.headerTitle,
       projectInfo: p.projectInfo,
@@ -435,7 +429,6 @@ export default function App() {
     setShowHistoryDrawer(false);
   };
 
-  // Xóa một phiên bản đã lưu
   const handleDeleteVersion = (id: string) => {
     const updated = savedVersions.filter(v => v.id !== id);
     setSavedVersions(updated);
@@ -444,9 +437,15 @@ export default function App() {
 
   if ((loading && status === 'NGOẠI TUYẾN') || !libsReady) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-white gap-4 font-['Be_Vietnam_Pro'] text-left" style={{ backgroundColor: '#0f172a' }}>
-        <IconLoader className="animate-spin text-orange-500 w-10 h-10" />
-        <p className="text-xs font-bold tracking-widest uppercase text-slate-400">Đang khởi tạo Dashboard...</p>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0f172a] gap-4" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <svg className="animate-spin text-orange-500 w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"></circle>
+          <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span className="text-slate-400 text-[10px] font-medium tracking-[0.2em] uppercase">
+          Đang tải
+        </span>
       </div>
     );
   }
@@ -469,14 +468,7 @@ export default function App() {
     >
       <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-      {exporting && (
-        <div className="fixed inset-0 bg-slate-900/90 z-[9999] flex flex-col items-center justify-center text-white backdrop-blur-sm">
-          <IconLoader className="animate-spin h-12 w-12 text-orange-500 mb-4" />
-          <p className="uppercase tracking-widest text-xs font-bold">Đang tối ưu & xuất hình ảnh...</p>
-        </div>
-      )}
-
-      {/* Menu Gọn Gàng (Dropdown) */}
+      {/* Menu Dropdown Gọn Gàng */}
       <div className="fixed top-6 right-6 z-50 print:hidden flex flex-col items-end">
         <button 
           onClick={() => setIsMenuOpen(!isMenuOpen)} 
@@ -491,14 +483,8 @@ export default function App() {
             <button onClick={() => { window.print(); setIsMenuOpen(false); }} className="bg-orange-600 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
               <IconPrinter size={16} /> Xuất PDF
             </button>
-            <button onClick={() => { handleExportImage(); setIsMenuOpen(false); }} className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
-              <IconImage size={16} /> Xuất Hình Ảnh
-            </button>
             <button onClick={() => { setShowDrawer(true); setIsMenuOpen(false); }} className="bg-slate-700 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
               <IconEdit size={16} /> Sửa Dữ Liệu
-            </button>
-            <button onClick={() => { setShowSaveModal(true); setIsMenuOpen(false); }} className="bg-emerald-600 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
-              <IconSave size={16} /> Lưu Phiên Bản
             </button>
             <button onClick={() => { setShowHistoryDrawer(true); setIsMenuOpen(false); }} className="bg-indigo-600 text-white px-5 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2 text-sm">
               <IconHistory size={16} /> Lịch Sử Báo Cáo
@@ -543,7 +529,7 @@ export default function App() {
                   {projectInfo}
                 </p>
               </div>
-              <div className="text-right flex-none mt-2">
+              <div className="text-right flex-none">
                 <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 editable leading-none">
                   {reportDate}
                 </div>
@@ -638,13 +624,11 @@ export default function App() {
 
               </div>
             </div>
-
-            <div className="bg-orange-600 h-2 w-full flex-none"></div>
           </div>
         </div>
       </div>
 
-      {/* MODAL 1: Sửa dữ liệu biểu đồ */}
+      {/* Drawer Cập nhật dữ liệu */}
       {showDrawer && (
         <div className="fixed inset-0 z-[100] flex items-center justify-end p-6 bg-slate-900/40 backdrop-blur-sm print:hidden text-left">
           <div className="bg-white w-[600px] h-full rounded-3xl shadow-2xl p-8 flex flex-col animate-fade-in-right">
@@ -689,38 +673,7 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL 2: Popup Lưu Phiên Bản */}
-      {showSaveModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm print:hidden">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md flex flex-col animate-fade-in-up">
-            <h3 className="font-black text-slate-800 uppercase tracking-widest mb-4">Lưu phiên bản báo cáo</h3>
-            <p className="text-sm text-slate-500 mb-6">Lưu lại trạng thái báo cáo hiện tại để bạn có thể xem lại hoặc tiếp tục công việc vào tuần sau.</p>
-            
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tên phiên bản</label>
-            <input 
-              type="text" 
-              placeholder="VD: Báo cáo Tuần 15 - 2026..." 
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition mb-8"
-              value={newVersionName}
-              onChange={(e) => setNewVersionName(e.target.value)}
-              autoFocus
-            />
-            
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setShowSaveModal(false)} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition">HỦY</button>
-              <button 
-                onClick={handleSaveVersion} 
-                disabled={!newVersionName.trim()} 
-                className="px-6 py-3 rounded-xl font-bold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 transition shadow-lg shadow-orange-200"
-              >
-                LƯU LẠI
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 3: Drawer Lịch Sử Báo Cáo */}
+      {/* MODAL 2: Drawer Lịch Sử Báo Cáo */}
       {showHistoryDrawer && (
         <div className="fixed inset-0 z-[100] flex items-center justify-end p-6 bg-slate-900/40 backdrop-blur-sm print:hidden text-left">
           <div className="bg-white w-[450px] h-full rounded-3xl shadow-2xl p-8 flex flex-col animate-fade-in-right">
@@ -736,7 +689,7 @@ export default function App() {
                     <IconHistory size={32} />
                   </div>
                   <p className="text-slate-400 text-sm font-medium">Chưa có phiên bản nào được lưu.</p>
-                  <p className="text-slate-400 text-xs mt-2">Sử dụng nút "Lưu Phiên Bản" trong Menu để lưu lại trạng thái báo cáo.</p>
+                  <p className="text-slate-400 text-xs mt-2">Hệ thống sẽ tự động lưu báo cáo khi bắt đầu một tuần mới (vào Thứ Hai).</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
@@ -752,7 +705,7 @@ export default function App() {
                         </button>
                       </div>
                       <button onClick={() => handleLoadVersion(v)} className="w-full py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 hover:text-white hover:bg-orange-600 hover:border-orange-600 transition z-10">
-                        KHÔI PHỤC PHIÊN BẢN NÀY
+                        SỬ DỤNG PHIÊN BẢN NÀY LÀM MẪU
                       </button>
                     </div>
                   ))}
@@ -764,7 +717,6 @@ export default function App() {
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `
-        /* Chặn toàn bộ thanh cuộn ở Body trên Vercel */
         body, html {
           margin: 0;
           padding: 0;
@@ -871,7 +823,6 @@ export default function App() {
             overflow: visible;
         }
             
-        /* CSS CHO TÍNH NĂNG RESIZER CO KÉO DIỆN TÍCH */
         .resizer-v {
             width: 10px;
             cursor: col-resize;
@@ -899,18 +850,11 @@ export default function App() {
         .custom-scroll::-webkit-scrollbar { width: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
-        /* Hiệu ứng mượt mà cho Menu và Modal */
         @keyframes fadeInDown {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in-down { animation: fadeInDown 0.2s ease-out forwards; }
-        
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .animate-fade-in-up { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         @keyframes fadeInRight {
           from { opacity: 0; transform: translateX(50px); }
