@@ -370,7 +370,7 @@ export default function App() {
       className="dashboard-root text-left"
       style={{
         backgroundColor: '#0f172a',
-        position: 'fixed', // KHÓA CỨNG MÀN HÌNH TẠI CHỖ
+        position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
@@ -378,7 +378,7 @@ export default function App() {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        overflow: 'hidden', // CHẮC CHẮN KHÔNG CHO PHÉP CUỘN
+        overflow: 'hidden', 
       }}
     >
       <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -403,7 +403,6 @@ export default function App() {
         </button>
       </div>
 
-      {/* GIẢI PHÁP TRIỆT ĐỂ: Khung ảo thay đổi kích thước linh hoạt, bên trong thu nhỏ đúng tỷ lệ mà không báo tràn nội dung ra ngoài. */}
       <div style={{ width: 1280 * scale, height: 720 * scale, position: 'relative' }}>
         <div style={{
           position: 'absolute',
@@ -451,8 +450,9 @@ export default function App() {
             </header>
 
             <div className="flex flex-1 overflow-hidden text-left" id="contentWrapper" ref={contentWrapperRef}>
-              {/* Left Column (Được áp dụng biến state leftColWidth) */}
-              <div className="flex flex-col p-8 overflow-visible border-r border-slate-100" style={{ flex: `0 0 ${leftColWidth}%` }}>
+              
+              {/* Left Column - Gắn thêm min-h-0 để giữ layout không bị tràn */}
+              <div className="flex flex-col p-8 min-h-0 overflow-visible border-r border-slate-100" style={{ flex: `0 0 ${leftColWidth}%` }}>
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-4">
                     <h2 className="text-[12px] font-black text-slate-900 tracking-widest uppercase flex items-center gap-2 leading-none text-left">
@@ -469,7 +469,7 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="space-y-1 flex-1 overflow-y-auto pr-4 custom-scroll text-left" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
+                <div className="space-y-1 flex-1 overflow-y-auto pr-4 custom-scroll text-left min-h-0" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
                   {activities.map((act, idx) => (
                     <div key={idx} className="activity-block group text-left">
                       <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-num editable text-left">
@@ -500,9 +500,10 @@ export default function App() {
                 }}
               ></div>
 
-              {/* Right Column */}
-              <div className="flex flex-col flex-1 pr-10 py-6 min-w-0 overflow-visible text-left">
-                <div className="flex items-start justify-between mb-8 px-2 gap-4">
+              {/* Right Column - Khóa cứng min-h-0 và shrink-0 để không bị đẩy rớt nội dung */}
+              <div className="flex flex-col flex-1 pr-10 py-6 min-w-0 min-h-0 overflow-visible text-left">
+                
+                <div className="flex items-start justify-between mb-8 px-2 gap-4 shrink-0">
                   <div className="flex flex-col gap-1 min-w-0 flex-1 overflow-visible text-left">
                     <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.innerText); syncToFirebase({chartMainTitle: e.currentTarget.innerText}); }} className="text-xl font-black text-slate-800 tracking-tighter uppercase editable leading-none text-left">
                       {chartMainTitle}
@@ -511,19 +512,19 @@ export default function App() {
                       {chartSubTitle}
                     </p>
                   </div>
-                  <div className="budget-card-slim shadow-sm flex-none text-left">
+                  <div className="budget-card-slim shadow-sm flex-none text-left shrink-0">
                     <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1 text-left" contentEditable suppressContentEditableWarning>DỰ KIẾN (VNĐ)</h3>
                     <input className="number-input-main" value={formatNumber(masterBudget)} onChange={(e) => { const v = parseNumber(e.target.value); setMasterBudget(v); syncToFirebase({masterBudget: v}); }} />
                   </div>
                 </div>
 
-                <div className="bg-slate-50/50 rounded-3xl p-6 flex flex-col border border-slate-100 flex-1 overflow-visible relative shadow-sm">
-                  <div className="flex-1 relative h-full">
+                <div className="bg-slate-50/50 rounded-3xl p-6 flex flex-col border border-slate-100 flex-1 min-h-0 overflow-visible relative shadow-sm">
+                  <div className="flex-1 relative h-full min-h-0">
                     <canvas ref={chartCanvasRef}></canvas>
                   </div>
                 </div>
 
-                <div className="mt-6 flex gap-3 px-2 overflow-visible">
+                <div className="mt-6 flex gap-3 px-2 overflow-visible shrink-0">
                   <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-1 min-w-0 overflow-visible text-left">
                     <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>ĐÃ CHI (VNĐ)</p>
                     <p className="adaptive-value font-black text-slate-900 text-left">{formatNumber(usedSum)}</p>
@@ -533,6 +534,7 @@ export default function App() {
                     <p className="adaptive-value font-black text-white text-left">{formatNumber(masterBudget - usedSum)}</p>
                   </div>
                 </div>
+
               </div>
             </div>
 
