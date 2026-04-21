@@ -49,6 +49,10 @@ export default function App() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [status, setStatus] = useState('NGOẠI TUYẾN');
   const [libsReady, setLibsReady] = useState(false);
+  const [scale, setScale] = useState(1);
+  
+  // TÍNH NĂNG RESIZER: State lưu phần trăm độ rộng của cột trái
+  const [leftColWidth, setLeftColWidth] = useState(58);
 
   // App State
   const [headerTitle, setHeaderTitle] = useState('BÁO CÁO CHIẾN DỊCH TRUYỀN THÔNG');
@@ -77,6 +81,52 @@ export default function App() {
   const mainSlideRef = useRef<HTMLDivElement>(null);
   const chartCanvasRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<any>(null);
+  
+  // Refs cho Resizer
+  const contentWrapperRef = useRef<HTMLDivElement>(null);
+  const isResizingRef = useRef(false);
+
+  // 0. Xử lý Logic Resizer (Kéo thả)
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizingRef.current || !contentWrapperRef.current) return;
+      const rect = contentWrapperRef.current.getBoundingClientRect();
+      // Tính toán tỷ lệ phần trăm kể cả khi khung đang bị scale (thu phóng)
+      const p = ((e.clientX - rect.left) / rect.width) * 100;
+      
+      if (p > 20 && p < 80) { // Giới hạn kéo từ 20% đến 80%
+        setLeftColWidth(p);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isResizingRef.current = false;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  // 0. Tính toán tự động thu phóng (Auto-Scale) để vừa màn hình
+  useEffect(() => {
+    const calculateScale = () => {
+      const availableWidth = window.innerWidth - 64; 
+      const availableHeight = window.innerHeight - 64;
+      const scaleX = availableWidth / 1280;
+      const scaleY = availableHeight / 720;
+      
+      const newScale = Math.min(scaleX, scaleY, 1);
+      setScale(newScale);
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, []);
 
   // 1. Nạp thư viện ngoài theo thứ tự chính xác
   useEffect(() => {
@@ -286,7 +336,7 @@ export default function App() {
     try {
       // @ts-ignore
       const canvas = await window.html2canvas(mainSlideRef.current, {
-        scale: 2,
+        scale: 2, 
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
@@ -313,7 +363,7 @@ export default function App() {
 
   if ((loading && status === 'NGOẠI TUYẾN') || !libsReady) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white gap-4 font-['Be_Vietnam_Pro']">
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white gap-4 font-['Be_Vietnam_Pro'] text-left">
         <IconLoader className="animate-spin text-orange-500 w-10 h-10" />
         <p className="text-xs font-bold tracking-widest uppercase text-slate-400">Đang khởi tạo Dashboard...</p>
       </div>
@@ -321,20 +371,18 @@ export default function App() {
   }
 
   return (
-    // THAY ĐỔI: overflow-auto trên container lớn để luôn giữ nguyên tỷ lệ 1280x720 bên trong
     <div 
-      className="dashboard-root"
+      className="dashboard-root text-left"
       style={{
         backgroundColor: '#0f172a',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        overflow: 'auto',
-        padding: '2rem'
+        overflow: 'hidden',
+        textAlign: 'left'
       }}
     >
-      
       <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
       {exporting && (
@@ -357,138 +405,150 @@ export default function App() {
         </button>
       </div>
 
-      {/* Main Slide Content - ĐƯỢC GIỮ CỨNG SIZE */}
-      <div 
-        ref={mainSlideRef} 
-        className="slide-container shadow-2xl"
-        style={{
-          width: '1280px',
-          height: '720px',
-          minWidth: '1280px',
-          minHeight: '720px',
-          background: 'white',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          userSelect: 'none',
-          overflow: 'hidden',
-          flexShrink: 0
-        }}
-      >
-        <header className="flex items-center justify-between px-10 py-5 flex-none border-b border-slate-50 bg-slate-50/30 overflow-visible">
-          <div className="flex items-center gap-6 flex-none">
-            <div className="bg-orange-600 text-white px-8 py-2.5 rounded-full shadow-lg shadow-orange-50">
-              <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText); syncToFirebase({headerTitle: e.currentTarget.innerText}); }} className="text-xl font-black tracking-tighter uppercase editable leading-none">
-                {headerTitle}
-              </h1>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'center center', transition: 'transform 0.2s ease-out' }}>
+        
+        {/* Main Slide Content */}
+        <div 
+          ref={mainSlideRef} 
+          className="slide-container shadow-2xl text-left"
+          style={{
+            width: '1280px',
+            height: '720px',
+            minWidth: '1280px',
+            minHeight: '720px',
+            background: 'white',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            userSelect: 'none',
+            overflow: 'hidden',
+            textAlign: 'left'
+          }}
+        >
+          <header className="flex items-center justify-between px-10 py-5 flex-none border-b border-slate-50 bg-slate-50/30 overflow-visible text-left">
+            <div className="flex items-center gap-6 flex-none">
+              <div className="bg-orange-600 text-white px-8 py-2.5 rounded-full shadow-lg shadow-orange-50">
+                <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText); syncToFirebase({headerTitle: e.currentTarget.innerText}); }} className="text-xl font-black tracking-tighter uppercase editable leading-none">
+                  {headerTitle}
+                </h1>
+              </div>
+              <p contentEditable suppressContentEditableWarning onBlur={(e) => { setProjectInfo(e.currentTarget.innerText); syncToFirebase({projectInfo: e.currentTarget.innerText}); }} className="text-orange-600 font-bold text-[10px] tracking-[0.2em] editable uppercase leading-none">
+                {projectInfo}
+              </p>
             </div>
-            <p contentEditable suppressContentEditableWarning onBlur={(e) => { setProjectInfo(e.currentTarget.innerText); syncToFirebase({projectInfo: e.currentTarget.innerText}); }} className="text-orange-600 font-bold text-[10px] tracking-[0.2em] editable uppercase leading-none">
-              {projectInfo}
-            </p>
-          </div>
-          <div className="text-right flex-none">
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${status === 'ĐÃ KẾT NỐI' ? 'text-emerald-500' : 'text-slate-300'}`}>
-              {status}
+            <div className="text-right flex-none">
+              <div className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${status === 'ĐÃ KẾT NỐI' ? 'text-emerald-500' : 'text-slate-300'}`}>
+                {status}
+              </div>
+              <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 editable leading-none">
+                {reportDate}
+              </div>
             </div>
-            <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 editable leading-none">
-              {reportDate}
-            </div>
-          </div>
-        </header>
+          </header>
 
-        <div className="flex flex-1 overflow-hidden" id="contentWrapper">
-          {/* Left Column */}
-          <div className="flex flex-col p-8 overflow-visible" style={{ flex: '0 0 58%' }}>
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-4">
-                <h2 className="text-[12px] font-black text-slate-900 tracking-widest uppercase flex items-center gap-2 leading-none">
-                  <span className="inline-block w-1.5 h-6 bg-orange-600 align-middle"></span>
-                  <span className="align-middle">Hoạt động triển khai tuần vừa qua</span>
-                </h2>
-                <div className="print:hidden flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                  <span className="text-[9px] font-bold text-slate-400">SIZE</span>
-                  <input type="range" min="0.5" max="1.5" step="0.05" value={activityFontSize} onChange={(e) => { setActivityFontSize(parseFloat(e.target.value)); syncToFirebase({activityFontSize: parseFloat(e.target.value)}); }} className="w-20 h-1 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
+          <div className="flex flex-1 overflow-hidden text-left" id="contentWrapper" ref={contentWrapperRef}>
+            {/* Left Column (Được áp dụng biến state leftColWidth) */}
+            <div className="flex flex-col p-8 overflow-visible border-r border-slate-100" style={{ flex: `0 0 ${leftColWidth}%` }}>
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-[12px] font-black text-slate-900 tracking-widest uppercase flex items-center gap-2 leading-none text-left">
+                    <span className="inline-block w-1.5 h-6 bg-orange-600 align-middle"></span>
+                    <span className="align-middle">Hoạt động triển khai tuần vừa qua</span>
+                  </h2>
+                  <div className="print:hidden flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                    <span className="text-[9px] font-bold text-slate-400">SIZE</span>
+                    <input type="range" min="0.5" max="1.5" step="0.05" value={activityFontSize} onChange={(e) => { setActivityFontSize(parseFloat(e.target.value)); syncToFirebase({activityFontSize: parseFloat(e.target.value)}); }} className="w-20 h-1 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
+                  </div>
+                </div>
+                <button onClick={() => { const n = [...activities, { num: 'X', title: 'MỤC MỚI', desc: 'Mô tả...' }]; setActivities(n); syncToFirebase({activities: n}); }} className="print:hidden text-orange-600 hover:bg-orange-50 p-1.5 rounded-lg transition">
+                  <IconPlus />
+                </button>
+              </div>
+
+              <div className="space-y-1 flex-1 overflow-y-auto pr-4 custom-scroll text-left" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
+                {activities.map((act, idx) => (
+                  <div key={idx} className="activity-block group text-left">
+                    <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-num editable text-left">
+                      {act.num}
+                    </div>
+                    <div className="activity-content text-left">
+                      <h3 contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].title = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-title editable text-left">
+                        {act.title}
+                      </h3>
+                      <p contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].desc = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-desc editable text-left">
+                        {act.desc}
+                      </p>
+                    </div>
+                    <button onClick={() => { const n = activities.filter((_, i) => i !== idx); setActivities(n); syncToFirebase({activities: n}); }} className="print:hidden absolute -right-2 top-0 text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">
+                      <IconX size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* DIV TÍNH NĂNG RESIZER CO KÉO DIỆN TÍCH */}
+            <div 
+              className="resizer-v print:hidden"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                isResizingRef.current = true;
+              }}
+            ></div>
+
+            {/* Right Column */}
+            <div className="flex flex-col flex-1 pr-10 py-6 min-w-0 overflow-visible text-left">
+              <div className="flex items-start justify-between mb-8 px-2 gap-4">
+                <div className="flex flex-col gap-1 min-w-0 flex-1 overflow-visible text-left">
+                  <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.innerText); syncToFirebase({chartMainTitle: e.currentTarget.innerText}); }} className="text-xl font-black text-slate-800 tracking-tighter uppercase editable leading-none text-left">
+                    {chartMainTitle}
+                  </h2>
+                  <p contentEditable suppressContentEditableWarning onBlur={(e) => { setChartSubTitle(e.currentTarget.innerText); syncToFirebase({chartSubTitle: e.currentTarget.innerText}); }} className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic editable leading-none text-left">
+                    {chartSubTitle}
+                  </p>
+                </div>
+                <div className="budget-card-slim shadow-sm flex-none text-left">
+                  <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1 text-left" contentEditable suppressContentEditableWarning>DỰ KIẾN (VNĐ)</h3>
+                  <input className="number-input-main" value={formatNumber(masterBudget)} onChange={(e) => { const v = parseNumber(e.target.value); setMasterBudget(v); syncToFirebase({masterBudget: v}); }} />
                 </div>
               </div>
-              <button onClick={() => { const n = [...activities, { num: 'X', title: 'MỤC MỚI', desc: 'Mô tả...' }]; setActivities(n); syncToFirebase({activities: n}); }} className="print:hidden text-orange-600 hover:bg-orange-50 p-1.5 rounded-lg transition">
-                <IconPlus />
-              </button>
-            </div>
 
-            <div className="space-y-1 flex-1 overflow-y-auto pr-4 custom-scroll" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
-              {activities.map((act, idx) => (
-                <div key={idx} className="activity-block group">
-                  <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-num editable">
-                    {act.num}
-                  </div>
-                  <div className="activity-content">
-                    <h3 contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].title = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-title editable">
-                      {act.title}
-                    </h3>
-                    <p contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].desc = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-desc editable">
-                      {act.desc}
-                    </p>
-                  </div>
-                  <button onClick={() => { const n = activities.filter((_, i) => i !== idx); setActivities(n); syncToFirebase({activities: n}); }} className="print:hidden absolute -right-2 top-0 text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">
-                    <IconX size={16} />
-                  </button>
+              <div className="bg-slate-50/50 rounded-3xl p-6 flex flex-col border border-slate-100 flex-1 overflow-visible relative shadow-sm">
+                <div className="flex-1 relative h-full">
+                  <canvas ref={chartCanvasRef}></canvas>
                 </div>
-              ))}
+              </div>
+
+              <div className="mt-6 flex gap-3 px-2 overflow-visible">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-1 min-w-0 overflow-visible text-left">
+                  <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>ĐÃ CHI (VNĐ)</p>
+                  <p className="adaptive-value font-black text-slate-900 text-left">{formatNumber(usedSum)}</p>
+                </div>
+                <div className="bg-emerald-600 rounded-2xl p-5 shadow-xl shadow-emerald-100/50 text-white flex-1 min-w-0 overflow-visible text-left">
+                  <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>CÒN LẠI (VNĐ)</p>
+                  <p className="adaptive-value font-black text-white text-left">{formatNumber(masterBudget - usedSum)}</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="flex flex-col flex-1 pr-10 py-6 min-w-0 overflow-visible">
-            <div className="flex items-start justify-between mb-8 px-2 gap-4">
-              <div className="flex flex-col gap-1 min-w-0 flex-1 overflow-visible">
-                <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.innerText); syncToFirebase({chartMainTitle: e.currentTarget.innerText}); }} className="text-xl font-black text-slate-800 tracking-tighter uppercase editable leading-none">
-                  {chartMainTitle}
-                </h2>
-                <p contentEditable suppressContentEditableWarning onBlur={(e) => { setChartSubTitle(e.currentTarget.innerText); syncToFirebase({chartSubTitle: e.currentTarget.innerText}); }} className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic editable leading-none">
-                  {chartSubTitle}
-                </p>
-              </div>
-              <div className="budget-card-slim shadow-sm flex-none">
-                <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1" contentEditable suppressContentEditableWarning>DỰ KIẾN (VNĐ)</h3>
-                <input className="number-input-main" value={formatNumber(masterBudget)} onChange={(e) => { const v = parseNumber(e.target.value); setMasterBudget(v); syncToFirebase({masterBudget: v}); }} />
-              </div>
-            </div>
-
-            <div className="bg-slate-50/50 rounded-3xl p-6 flex flex-col border border-slate-100 flex-1 overflow-visible relative shadow-sm">
-              <div className="flex-1 relative h-full">
-                <canvas ref={chartCanvasRef}></canvas>
-              </div>
-            </div>
-
-            <div className="mt-6 flex gap-3 px-2 overflow-visible">
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-1 min-w-0 overflow-visible">
-                <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none" contentEditable suppressContentEditableWarning>ĐÃ CHI (VNĐ)</p>
-                <p className="adaptive-value font-black text-slate-900">{formatNumber(usedSum)}</p>
-              </div>
-              <div className="bg-emerald-600 rounded-2xl p-5 shadow-xl shadow-emerald-100/50 text-white flex-1 min-w-0 overflow-visible">
-                <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none" contentEditable suppressContentEditableWarning>CÒN LẠI (VNĐ)</p>
-                <p className="adaptive-value font-black text-white">{formatNumber(masterBudget - usedSum)}</p>
-              </div>
-            </div>
-          </div>
+          <div className="bg-orange-600 h-2 w-full flex-none"></div>
         </div>
-
-        <div className="bg-orange-600 h-2 w-full flex-none"></div>
       </div>
 
       {/* Drawer Cập nhật dữ liệu */}
       {showDrawer && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-end p-6 bg-slate-900/40 backdrop-blur-sm print:hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-end p-6 bg-slate-900/40 backdrop-blur-sm print:hidden text-left">
           <div className="bg-white w-[600px] h-full rounded-3xl shadow-2xl p-8 flex flex-col">
             <div className="flex justify-between items-center mb-8 pb-4 border-b">
               <h3 className="font-black text-slate-800 uppercase tracking-widest">Dữ liệu biểu đồ</h3>
               <button onClick={() => setShowDrawer(false)} className="text-slate-400 hover:text-slate-900"><IconX size={24} /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-2 custom-scroll">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scroll text-left">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-slate-400 text-xs font-bold uppercase border-b">
+                  <tr className="text-slate-400 text-xs font-bold uppercase border-b text-left">
                     <th className="text-left py-3 w-1/3">Danh mục</th>
                     <th className="text-right py-3 w-1/4">Số tiền</th>
                     <th className="text-right py-3 w-1/4">Cộng thêm</th>
@@ -499,7 +559,7 @@ export default function App() {
                   {chartData.map((item, idx) => (
                     <tr key={idx} className="border-b border-slate-50">
                       <td className="py-3">
-                        <input className="w-full font-bold text-slate-700 outline-none bg-slate-50 px-2 py-2 rounded-xl" value={item.label} onChange={(e) => { const n = [...chartData]; n[idx].label = e.target.value; setChartData(n); syncToFirebase({chartData: n}); }} />
+                        <input className="w-full font-bold text-slate-700 outline-none bg-slate-50 px-2 py-2 rounded-xl text-left" value={item.label} onChange={(e) => { const n = [...chartData]; n[idx].label = e.target.value; setChartData(n); syncToFirebase({chartData: n}); }} />
                       </td>
                       <td className="py-3 text-right">
                         <input className="text-right font-black text-orange-600 outline-none bg-slate-50 px-2 py-2 rounded-xl w-full" value={formatNumber(item.value)} onChange={(e) => { const n = [...chartData]; n[idx].value = parseNumber(e.target.value); setChartData(n); syncToFirebase({chartData: n}); }} />
@@ -521,11 +581,12 @@ export default function App() {
         </div>
       )}
 
-      {/* BÊ NGUYÊN CSS GỐC VÀO ĐÂY ĐỂ ĐẢM BẢO GIAO DIỆN Y HỆT */}
+      {/* CSS CHỨA ĐẦY ĐỦ CÁC CLASS, BAO GỒM CẢ RESIZER */}
       <style dangerouslySetInnerHTML={{ __html: `
         .dashboard-root, .dashboard-root * {
           font-family: 'Be Vietnam Pro', sans-serif !important;
           box-sizing: border-box;
+          text-align: left; 
         }
         
         .editable { 
@@ -533,6 +594,7 @@ export default function App() {
             white-space: pre-wrap; 
             word-break: break-word;
             line-height: 1.2;
+            text-align: left;
         }
         .editable:hover {
             background-color: #fff7ed;
@@ -551,6 +613,7 @@ export default function App() {
             align-items: flex-start;
             gap: 15px;
             padding: 8px 0;
+            text-align: left;
         }
 
         .activity-num {
@@ -559,7 +622,7 @@ export default function App() {
             font-size: calc(3rem * var(--activity-font-scale, 1));
             line-height: 1;
             min-width: 65px;
-            text-align: left;
+            text-align: left !important;
             flex-shrink: 0;
             opacity: 0.9;
             text-shadow: 2px 2px 0px rgba(154, 52, 18, 0.15);
@@ -568,6 +631,7 @@ export default function App() {
         .activity-content {
             flex: 1;
             padding-top: 2px;
+            text-align: left;
         }
 
         .activity-title {
@@ -577,12 +641,14 @@ export default function App() {
             text-transform: uppercase;
             margin-bottom: 3px;
             line-height: 1.2;
+            text-align: left;
         }
 
         .activity-desc {
             font-size: calc(0.85rem * var(--activity-font-scale, 1)); 
             color: #475569;
             line-height: 1.4;
+            text-align: left;
         }
 
         .budget-card-slim {
@@ -594,10 +660,11 @@ export default function App() {
             flex-direction: column;
             flex-shrink: 0;
             width: fit-content;
+            text-align: left;
         }
 
         .number-input-main {
-            text-align: left;
+            text-align: left !important;
             background: transparent;
             border: none;
             font-weight: 900;
@@ -614,6 +681,32 @@ export default function App() {
             white-space: nowrap; 
             overflow: visible;
         }
+            
+        /* CSS CHO TÍNH NĂNG RESIZER CO KÉO DIỆN TÍCH */
+        .resizer-v {
+            width: 10px;
+            cursor: col-resize;
+            background: transparent;
+            z-index: 50;
+            position: relative;
+        }
+        .resizer-v::after {
+            content: '';
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            height: 60px; width: 2px;
+            background: #cbd5e1;
+            border-radius: 2px;
+            transition: background 0.2s;
+        }
+        .resizer-v:hover::after, .resizer-v:active::after {
+            background: #ea580c;
+            width: 4px;
+        }
+
+        /* Ghi đè căn phải cho một số input trong bảng nhập liệu */
+        .text-right { text-align: right !important; }
 
         .custom-scroll::-webkit-scrollbar { width: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -621,7 +714,8 @@ export default function App() {
         @media print {
             body { background: white !important; padding: 0 !important; }
             .dashboard-root { background: white !important; padding: 0 !important; display: block; overflow: visible; }
-            .slide-container { box-shadow: none !important; border: none !important; }
+            .slide-container { box-shadow: none !important; border: none !important; transform: scale(1) !important; }
+            .resizer-v { display: none !important; }
         }
       `}} />
     </div>
