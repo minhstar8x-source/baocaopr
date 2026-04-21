@@ -49,6 +49,7 @@ export default function App() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [status, setStatus] = useState('NGOẠI TUYẾN');
   const [libsReady, setLibsReady] = useState(false);
+  const [scale, setScale] = useState(1);
   
   // TÍNH NĂNG RESIZER: State lưu phần trăm độ rộng của cột trái
   const [leftColWidth, setLeftColWidth] = useState(58);
@@ -107,6 +108,21 @@ export default function App() {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
+  }, []);
+
+  // 0. Thu phóng (Auto-Scale) vừa màn hình
+  useEffect(() => {
+    const calculateScale = () => {
+      const scaleX = window.innerWidth / 1280;
+      const scaleY = window.innerHeight / 720;
+      // Dùng Math.min để luôn thấy hết được toàn bộ nội dung mà không bị cắt
+      const newScale = Math.min(scaleX, scaleY);
+      setScale(newScale);
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
   }, []);
 
   // 1. Nạp thư viện ngoài
@@ -342,7 +358,7 @@ export default function App() {
 
   if ((loading && status === 'NGOẠI TUYẾN') || !libsReady) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white gap-4 font-['Be_Vietnam_Pro'] text-left">
+      <div className="min-h-screen flex flex-col items-center justify-center text-white gap-4 font-['Be_Vietnam_Pro'] text-left" style={{ backgroundColor: '#0f172a' }}>
         <IconLoader className="animate-spin text-orange-500 w-10 h-10" />
         <p className="text-xs font-bold tracking-widest uppercase text-slate-400">Đang khởi tạo Dashboard...</p>
       </div>
@@ -354,13 +370,15 @@ export default function App() {
       className="dashboard-root text-left"
       style={{
         backgroundColor: '#0f172a',
-        width: '100vw',
-        height: '100vh',
+        position: 'fixed', // KHÓA CỨNG MÀN HÌNH TẠI CHỖ
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        overflow: 'hidden', // KHÔNG CHO PHÉP CUỘN - y hệt file gốc
-        textAlign: 'left'
+        overflow: 'hidden', // CHẮC CHẮN KHÔNG CHO PHÉP CUỘN
       }}
     >
       <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -372,7 +390,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Toolbar - Cố định vị trí ngoài cùng */}
+      {/* Toolbar */}
       <div className="fixed top-6 right-6 flex flex-col gap-3 z-50 print:hidden">
         <button onClick={() => window.print()} className="bg-orange-600 text-white px-6 py-3 rounded-full font-bold shadow-xl hover:scale-105 transition flex items-center gap-2">
           <IconPrinter /> XUẤT PDF
@@ -385,132 +403,142 @@ export default function App() {
         </button>
       </div>
 
-      {/* Main Slide Content - HIỂN THỊ CỐ ĐỊNH Ở GIỮA THEO ĐÚNG NGUYÊN BẢN */}
-      <div 
-        ref={mainSlideRef} 
-        className="slide-container shadow-2xl text-left"
-        style={{
+      {/* GIẢI PHÁP TRIỆT ĐỂ: Khung ảo thay đổi kích thước linh hoạt, bên trong thu nhỏ đúng tỷ lệ mà không báo tràn nội dung ra ngoài. */}
+      <div style={{ width: 1280 * scale, height: 720 * scale, position: 'relative' }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
           width: '1280px',
           height: '720px',
-          minWidth: '1280px',
-          minHeight: '720px',
-          background: 'white',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          userSelect: 'none',
-          overflow: 'hidden',
-          textAlign: 'left'
-        }}
-      >
-        <header className="flex items-center justify-between px-10 py-5 flex-none border-b border-slate-50 bg-slate-50/30 overflow-visible text-left">
-          <div className="flex items-center gap-6 flex-none">
-            <div className="bg-orange-600 text-white px-8 py-2.5 rounded-full shadow-lg shadow-orange-50">
-              <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText); syncToFirebase({headerTitle: e.currentTarget.innerText}); }} className="text-xl font-black tracking-tighter uppercase editable leading-none">
-                {headerTitle}
-              </h1>
-            </div>
-            <p contentEditable suppressContentEditableWarning onBlur={(e) => { setProjectInfo(e.currentTarget.innerText); syncToFirebase({projectInfo: e.currentTarget.innerText}); }} className="text-orange-600 font-bold text-[10px] tracking-[0.2em] editable uppercase leading-none">
-              {projectInfo}
-            </p>
-          </div>
-          <div className="text-right flex-none">
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${status === 'ĐÃ KẾT NỐI' ? 'text-emerald-500' : 'text-slate-300'}`}>
-              {status}
-            </div>
-            <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 editable leading-none">
-              {reportDate}
-            </div>
-          </div>
-        </header>
-
-        <div className="flex flex-1 overflow-hidden text-left" id="contentWrapper" ref={contentWrapperRef}>
-          {/* Left Column (Được áp dụng biến state leftColWidth) */}
-          <div className="flex flex-col p-8 overflow-visible border-r border-slate-100" style={{ flex: `0 0 ${leftColWidth}%` }}>
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-4">
-                <h2 className="text-[12px] font-black text-slate-900 tracking-widest uppercase flex items-center gap-2 leading-none text-left">
-                  <span className="inline-block w-1.5 h-6 bg-orange-600 align-middle"></span>
-                  <span className="align-middle">Hoạt động triển khai tuần vừa qua</span>
-                </h2>
-                <div className="print:hidden flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                  <span className="text-[9px] font-bold text-slate-400">SIZE</span>
-                  <input type="range" min="0.5" max="1.5" step="0.05" value={activityFontSize} onChange={(e) => { setActivityFontSize(parseFloat(e.target.value)); syncToFirebase({activityFontSize: parseFloat(e.target.value)}); }} className="w-20 h-1 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
-                </div>
-              </div>
-              <button onClick={() => { const n = [...activities, { num: 'X', title: 'MỤC MỚI', desc: 'Mô tả...' }]; setActivities(n); syncToFirebase({activities: n}); }} className="print:hidden text-orange-600 hover:bg-orange-50 p-1.5 rounded-lg transition">
-                <IconPlus />
-              </button>
-            </div>
-
-            <div className="space-y-1 flex-1 overflow-y-auto pr-4 custom-scroll text-left" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
-              {activities.map((act, idx) => (
-                <div key={idx} className="activity-block group text-left">
-                  <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-num editable text-left">
-                    {act.num}
-                  </div>
-                  <div className="activity-content text-left">
-                    <h3 contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].title = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-title editable text-left">
-                      {act.title}
-                    </h3>
-                    <p contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].desc = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-desc editable text-left">
-                      {act.desc}
-                    </p>
-                  </div>
-                  <button onClick={() => { const n = activities.filter((_, i) => i !== idx); setActivities(n); syncToFirebase({activities: n}); }} className="print:hidden absolute -right-2 top-0 text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">
-                    <IconX size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* DIV TÍNH NĂNG RESIZER CO KÉO DIỆN TÍCH */}
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+        }}>
+          {/* Main Slide Content */}
           <div 
-            className="resizer-v print:hidden"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              isResizingRef.current = true;
+            ref={mainSlideRef} 
+            className="slide-container shadow-2xl text-left"
+            style={{
+              width: '100%',
+              height: '100%',
+              background: 'white',
+              display: 'flex',
+              flexDirection: 'column',
+              userSelect: 'none',
+              overflow: 'hidden',
+              textAlign: 'left'
             }}
-          ></div>
-
-          {/* Right Column */}
-          <div className="flex flex-col flex-1 pr-10 py-6 min-w-0 overflow-visible text-left">
-            <div className="flex items-start justify-between mb-8 px-2 gap-4">
-              <div className="flex flex-col gap-1 min-w-0 flex-1 overflow-visible text-left">
-                <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.innerText); syncToFirebase({chartMainTitle: e.currentTarget.innerText}); }} className="text-xl font-black text-slate-800 tracking-tighter uppercase editable leading-none text-left">
-                  {chartMainTitle}
-                </h2>
-                <p contentEditable suppressContentEditableWarning onBlur={(e) => { setChartSubTitle(e.currentTarget.innerText); syncToFirebase({chartSubTitle: e.currentTarget.innerText}); }} className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic editable leading-none text-left">
-                  {chartSubTitle}
+          >
+            <header className="flex items-center justify-between px-10 py-5 flex-none border-b border-slate-50 bg-slate-50/30 overflow-visible text-left">
+              <div className="flex items-center gap-6 flex-none">
+                <div className="bg-orange-600 text-white px-8 py-2.5 rounded-full shadow-lg shadow-orange-50">
+                  <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText); syncToFirebase({headerTitle: e.currentTarget.innerText}); }} className="text-xl font-black tracking-tighter uppercase editable leading-none">
+                    {headerTitle}
+                  </h1>
+                </div>
+                <p contentEditable suppressContentEditableWarning onBlur={(e) => { setProjectInfo(e.currentTarget.innerText); syncToFirebase({projectInfo: e.currentTarget.innerText}); }} className="text-orange-600 font-bold text-[10px] tracking-[0.2em] editable uppercase leading-none">
+                  {projectInfo}
                 </p>
               </div>
-              <div className="budget-card-slim shadow-sm flex-none text-left">
-                <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1 text-left" contentEditable suppressContentEditableWarning>DỰ KIẾN (VNĐ)</h3>
-                <input className="number-input-main" value={formatNumber(masterBudget)} onChange={(e) => { const v = parseNumber(e.target.value); setMasterBudget(v); syncToFirebase({masterBudget: v}); }} />
+              <div className="text-right flex-none">
+                <div className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${status === 'ĐÃ KẾT NỐI' ? 'text-emerald-500' : 'text-slate-300'}`}>
+                  {status}
+                </div>
+                <div contentEditable suppressContentEditableWarning onBlur={(e) => { setReportDate(e.currentTarget.innerText); syncToFirebase({reportDate: e.currentTarget.innerText}); }} className="text-lg font-bold text-slate-700 editable leading-none">
+                  {reportDate}
+                </div>
+              </div>
+            </header>
+
+            <div className="flex flex-1 overflow-hidden text-left" id="contentWrapper" ref={contentWrapperRef}>
+              {/* Left Column (Được áp dụng biến state leftColWidth) */}
+              <div className="flex flex-col p-8 overflow-visible border-r border-slate-100" style={{ flex: `0 0 ${leftColWidth}%` }}>
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-[12px] font-black text-slate-900 tracking-widest uppercase flex items-center gap-2 leading-none text-left">
+                      <span className="inline-block w-1.5 h-6 bg-orange-600 align-middle"></span>
+                      <span className="align-middle">Hoạt động triển khai tuần vừa qua</span>
+                    </h2>
+                    <div className="print:hidden flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                      <span className="text-[9px] font-bold text-slate-400">SIZE</span>
+                      <input type="range" min="0.5" max="1.5" step="0.05" value={activityFontSize} onChange={(e) => { setActivityFontSize(parseFloat(e.target.value)); syncToFirebase({activityFontSize: parseFloat(e.target.value)}); }} className="w-20 h-1 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
+                    </div>
+                  </div>
+                  <button onClick={() => { const n = [...activities, { num: 'X', title: 'MỤC MỚI', desc: 'Mô tả...' }]; setActivities(n); syncToFirebase({activities: n}); }} className="print:hidden text-orange-600 hover:bg-orange-50 p-1.5 rounded-lg transition">
+                    <IconPlus />
+                  </button>
+                </div>
+
+                <div className="space-y-1 flex-1 overflow-y-auto pr-4 custom-scroll text-left" style={{ '--activity-font-scale': activityFontSize } as React.CSSProperties}>
+                  {activities.map((act, idx) => (
+                    <div key={idx} className="activity-block group text-left">
+                      <div contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].num = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-num editable text-left">
+                        {act.num}
+                      </div>
+                      <div className="activity-content text-left">
+                        <h3 contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].title = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-title editable text-left">
+                          {act.title}
+                        </h3>
+                        <p contentEditable suppressContentEditableWarning onBlur={(e) => { const n = [...activities]; n[idx].desc = e.currentTarget.innerText; setActivities(n); syncToFirebase({activities: n}); }} className="activity-desc editable text-left">
+                          {act.desc}
+                        </p>
+                      </div>
+                      <button onClick={() => { const n = activities.filter((_, i) => i !== idx); setActivities(n); syncToFirebase({activities: n}); }} className="print:hidden absolute -right-2 top-0 text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">
+                        <IconX size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* TÍNH NĂNG RESIZER CO KÉO DIỆN TÍCH */}
+              <div 
+                className="resizer-v print:hidden"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  isResizingRef.current = true;
+                }}
+              ></div>
+
+              {/* Right Column */}
+              <div className="flex flex-col flex-1 pr-10 py-6 min-w-0 overflow-visible text-left">
+                <div className="flex items-start justify-between mb-8 px-2 gap-4">
+                  <div className="flex flex-col gap-1 min-w-0 flex-1 overflow-visible text-left">
+                    <h2 contentEditable suppressContentEditableWarning onBlur={(e) => { setChartMainTitle(e.currentTarget.innerText); syncToFirebase({chartMainTitle: e.currentTarget.innerText}); }} className="text-xl font-black text-slate-800 tracking-tighter uppercase editable leading-none text-left">
+                      {chartMainTitle}
+                    </h2>
+                    <p contentEditable suppressContentEditableWarning onBlur={(e) => { setChartSubTitle(e.currentTarget.innerText); syncToFirebase({chartSubTitle: e.currentTarget.innerText}); }} className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic editable leading-none text-left">
+                      {chartSubTitle}
+                    </p>
+                  </div>
+                  <div className="budget-card-slim shadow-sm flex-none text-left">
+                    <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest editable leading-none mb-1 text-left" contentEditable suppressContentEditableWarning>DỰ KIẾN (VNĐ)</h3>
+                    <input className="number-input-main" value={formatNumber(masterBudget)} onChange={(e) => { const v = parseNumber(e.target.value); setMasterBudget(v); syncToFirebase({masterBudget: v}); }} />
+                  </div>
+                </div>
+
+                <div className="bg-slate-50/50 rounded-3xl p-6 flex flex-col border border-slate-100 flex-1 overflow-visible relative shadow-sm">
+                  <div className="flex-1 relative h-full">
+                    <canvas ref={chartCanvasRef}></canvas>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex gap-3 px-2 overflow-visible">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-1 min-w-0 overflow-visible text-left">
+                    <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>ĐÃ CHI (VNĐ)</p>
+                    <p className="adaptive-value font-black text-slate-900 text-left">{formatNumber(usedSum)}</p>
+                  </div>
+                  <div className="bg-emerald-600 rounded-2xl p-5 shadow-xl shadow-emerald-100/50 text-white flex-1 min-w-0 overflow-visible text-left">
+                    <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>CÒN LẠI (VNĐ)</p>
+                    <p className="adaptive-value font-black text-white text-left">{formatNumber(masterBudget - usedSum)}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="bg-slate-50/50 rounded-3xl p-6 flex flex-col border border-slate-100 flex-1 overflow-visible relative shadow-sm">
-              <div className="flex-1 relative h-full">
-                <canvas ref={chartCanvasRef}></canvas>
-              </div>
-            </div>
-
-            <div className="mt-6 flex gap-3 px-2 overflow-visible">
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex-1 min-w-0 overflow-visible text-left">
-                <p className="text-[7.5px] font-black text-slate-400 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>ĐÃ CHI (VNĐ)</p>
-                <p className="adaptive-value font-black text-slate-900 text-left">{formatNumber(usedSum)}</p>
-              </div>
-              <div className="bg-emerald-600 rounded-2xl p-5 shadow-xl shadow-emerald-100/50 text-white flex-1 min-w-0 overflow-visible text-left">
-                <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left" contentEditable suppressContentEditableWarning>CÒN LẠI (VNĐ)</p>
-                <p className="adaptive-value font-black text-white text-left">{formatNumber(masterBudget - usedSum)}</p>
-              </div>
-            </div>
+            <div className="bg-orange-600 h-2 w-full flex-none"></div>
           </div>
         </div>
-
-        <div className="bg-orange-600 h-2 w-full flex-none"></div>
       </div>
 
       {/* Drawer Cập nhật dữ liệu */}
@@ -559,6 +587,14 @@ export default function App() {
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `
+        /* Chặn toàn bộ thanh cuộn ở Body trên Vercel */
+        body, html {
+          margin: 0;
+          padding: 0;
+          overflow: hidden !important; 
+          background-color: #0f172a;
+        }
+
         .dashboard-root, .dashboard-root * {
           font-family: 'Be Vietnam Pro', sans-serif !important;
           box-sizing: border-box;
@@ -687,8 +723,8 @@ export default function App() {
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
         @media print {
-            body { background: white !important; padding: 0 !important; }
-            .dashboard-root { background: white !important; padding: 0 !important; display: block; overflow: visible; }
+            body { background: white !important; padding: 0 !important; overflow: visible !important; }
+            .dashboard-root { background: white !important; padding: 0 !important; display: block; overflow: visible !important; position: static !important; height: auto !important;}
             .slide-container { box-shadow: none !important; border: none !important; transform: scale(1) !important; }
             .resizer-v { display: none !important; }
         }
