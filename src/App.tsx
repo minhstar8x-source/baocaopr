@@ -530,8 +530,8 @@ export default function App() {
         )}
       </div>
 
-      <div style={{ width: 1280 * scale, height: 720 * scale, position: 'relative' }}>
-        <div style={{
+      <div className="print-wrapper-1" style={{ width: 1280 * scale, height: 720 * scale, position: 'relative' }}>
+        <div className="print-wrapper-2" style={{
           position: 'absolute',
           top: 0,
           left: 0,
@@ -800,8 +800,8 @@ export default function App() {
             cursor: text;
         }
         .editable:focus {
-            outline: none;
-            border-bottom: 2px solid #ea580c;
+            background-color: #fff7ed;
+            box-shadow: 0 0 0 1px #fdba74;
         }
 
         .activity-block {
@@ -922,10 +922,52 @@ export default function App() {
         }
         .animate-fade-in-right { animation: fadeInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
+        /* CẤU HÌNH CSS ĐỂ XUẤT PDF HOÀN HẢO */
         @media print {
-            body { background: white !important; padding: 0 !important; overflow: visible !important; }
-            .dashboard-root { background: white !important; padding: 0 !important; display: block; overflow: visible !important; position: static !important; height: auto !important;}
-            .slide-container { box-shadow: none !important; border: none !important; transform: scale(1) !important; }
+            @page {
+                size: 1280px 720px;
+                margin: 0;
+            }
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                width: 1280px !important;
+                height: 720px !important;
+                overflow: hidden !important;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            .dashboard-root { 
+                position: absolute !important; 
+                top: 0 !important; 
+                left: 0 !important; 
+                right: auto !important;
+                bottom: auto !important;
+                background: white !important; 
+                display: block !important; 
+                width: 1280px !important;
+                height: 720px !important;
+                overflow: hidden !important;
+            }
+            .print-wrapper-1, .print-wrapper-2 {
+                width: 1280px !important;
+                height: 720px !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                transform: scale(1) !important;
+            }
+            .slide-container { 
+                box-shadow: none !important; 
+                border: none !important; 
+                width: 1280px !important;
+                height: 720px !important;
+                margin: 0 !important;
+            }
             .resizer-v { display: none !important; }
         }
       `}} />
