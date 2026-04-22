@@ -556,7 +556,7 @@ export default function App() {
             <header className="flex items-center justify-between px-10 py-5 flex-none border-b border-slate-50 bg-slate-50/30 overflow-visible text-left">
               <div className="flex items-center gap-6 flex-none">
                 <div className="bg-orange-600 text-white px-8 py-2.5 rounded-full shadow-lg shadow-orange-50">
-                  <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText || ''); syncToFirebase({headerTitle: e.currentTarget.innerText || ''}); }} className="text-xl font-black tracking-tighter uppercase editable leading-none">
+                  <h1 contentEditable suppressContentEditableWarning onBlur={(e) => { setHeaderTitle(e.currentTarget.innerText || ''); syncToFirebase({headerTitle: e.currentTarget.innerText || ''}); }} className="text-white text-xl font-black tracking-tighter uppercase editable leading-none">
                     {headerTitle}
                   </h1>
                 </div>
@@ -652,8 +652,8 @@ export default function App() {
                     <p className="adaptive-value font-black text-slate-900 text-left">{formatNumber(usedSum)}</p>
                   </div>
                   <div className="bg-emerald-600 rounded-2xl p-5 shadow-xl shadow-emerald-100/50 text-white flex-1 min-w-0 overflow-visible text-left">
-                    <p className="text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelRemain(e.currentTarget.innerText || ''); syncToFirebase({labelRemain: e.currentTarget.innerText || ''}); }}>{labelRemain}</p>
-                    <p className="adaptive-value font-black text-white text-left">{formatNumber(masterBudget - usedSum)}</p>
+                    <p className="text-white text-[7.5px] font-black text-emerald-100 uppercase mb-2 editable leading-none text-left inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => { setLabelRemain(e.currentTarget.innerText || ''); syncToFirebase({labelRemain: e.currentTarget.innerText || ''}); }}>{labelRemain}</p>
+                    <p className="text-white adaptive-value font-black text-white text-left">{formatNumber(masterBudget - usedSum)}</p>
                   </div>
                 </div>
 
@@ -941,6 +941,12 @@ export default function App() {
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
             }
+            /* Ép buộc màu chữ không bị trình duyệt tự động chuyển sang đen */
+            .text-white { color: white !important; }
+            .text-emerald-100 { color: #d1fae5 !important; }
+            .text-slate-400 { color: #94a3b8 !important; }
+            .text-orange-600 { color: #ea580c !important; }
+            
             .dashboard-root { 
                 position: absolute !important; 
                 top: 0 !important; 
